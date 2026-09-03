@@ -54,7 +54,7 @@
     .centro { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 26px 20px; gap: 18px; }
     .marchio { text-align: center; }
     .marchio .nome { font-family: 'Corben', Georgia, serif; font-size: 30px; color: var(--oro); line-height: 1.1; }
-    .marchio .luogo { font-size: 12.5px; color: var(--tenue2); margin-top: 6px; }
+    .marchio .luogo { font-size: 12.5px; color: var(--tenue); margin-top: 6px; }
     input[type=password] {
       min-height: 54px; width: 100%; font-size: 18px; font-weight: 700; text-align: center;
       background: var(--carta); border: 2px solid var(--bordo); border-radius: 14px; color: var(--testo);
@@ -70,7 +70,7 @@
       color: var(--tenue); font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 26px;
     }
     .file button.scelta { background: var(--oro); border-color: var(--oro); color: var(--su-oro); }
-    .spiega { font-size: 12px; color: var(--tenue2); line-height: 1.5; }
+    .spiega { font-size: 12px; color: var(--tenue); line-height: 1.5; }
 
     .avviso-riga {
       width: 100%; background: var(--carta2); border: 2px solid var(--bordo); border-radius: 18px;
@@ -265,6 +265,8 @@
   var audio = null;
   var blocco = null;
   var filaScelta = '';
+  var tenutaAttiva = false;   // una conferma e' in corso: non ridisegnare sotto il dito
+  var chiedendoTelegram = false;
 
   var passoCodice = document.getElementById('passo-codice');
   var passoIngresso = document.getElementById('passo-ingresso');
@@ -325,6 +327,9 @@
   }
 
   function vibra(schema) { try { if (navigator.vibrate) navigator.vibrate(schema); } catch (e) {} }
+
+  // Il browser sblocca l'audio solo dopo un gesto: basta il primo tocco, qualunque esso sia.
+  document.addEventListener('pointerdown', preparaAudio, { once: true });
 
   function tieniAcceso() {
     try {
@@ -412,6 +417,24 @@
 
   document.getElementById('riga-push').addEventListener('click', attivaPush);
 
+  // Il server lega le notifiche a "questo telefono -> questa fila": se il
+  // cameriere cambia fila va riscritta, altrimenti le notifiche restano mute.
+  function aggiornaIscrizionePush() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !window.Notification) return;
+    if (Notification.permission !== 'granted') return;
+    navigator.serviceWorker.getRegistration().then(function (reg) {
+      if (!reg) return null;
+      return reg.pushManager.getSubscription().then(function (isc) {
+        if (!isc) return null;
+        return fetch(backendUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + leggi(K_CODICE) },
+          body: JSON.stringify({ azione: 'iscrizione', endpoint: isc.endpoint, fila: filaScelta || leggi(K_FILA) })
+        });
+      });
+    }).catch(function () {});
+  }
+
   function controllaPush() {
     if (suApple() && !comeApp()) { segnaPushAttiva(false, 'Su iPhone serve un passaggio in più'); return; }
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !window.Notification) {
@@ -429,7 +452,8 @@
   // ---------- Telegram ----------
   document.getElementById('riga-telegram').addEventListener('click', function () {
     var riga = this;
-    if (!filaScelta) return;
+    if (!filaScelta || chiedendoTelegram) return;
+    chiedendoTelegram = true;
     riga.querySelector('.azione').textContent = '...';
     fetch(backendUrl, {
       method: 'POST',
@@ -438,15 +462,24 @@
     })
       .then(function (r) { return r.json(); })
       .then(function (j) {
+        chiedendoTelegram = false;
         riga.querySelector('.azione').textContent = 'Attiva';
-        if (!j.ok) return;
+        if (!j.ok) {
+          riga.querySelector('.sotto').textContent = 'Non riuscito, tocca di nuovo per riprovare';
+          return;
+        }
+        riga.querySelector('.sotto').textContent = 'Uguale su iPhone e Android';
         document.getElementById('testo-telegram').textContent =
           'Ti registro per la fila ' + filaScelta + ': tocca il pulsante, si apre il bot giusto.';
         document.getElementById('link-telegram').href = 'https://t.me/' + botTelegram + '?start=' + j.codice;
         document.getElementById('guida-telegram').hidden = false;
         riga.classList.add('acceso');
       })
-      .catch(function () { riga.querySelector('.azione').textContent = 'Attiva'; });
+      .catch(function () {
+        chiedendoTelegram = false;
+        riga.querySelector('.azione').textContent = 'Attiva';
+        riga.querySelector('.sotto').textContent = 'Connessione assente, riprova';
+      });
   });
 
   // ---------- elenco chiamate ----------
@@ -475,6 +508,8 @@
 
     function avvia(evento) {
       if (evento.button && evento.button !== 0) return;
+      if (attesa || tenutaAttiva) return;   // gia' in corso: ignora un secondo dito
+      tenutaAttiva = true;
       preparaAudio();
       riempi.style.transition = 'width ' + TENUTA + 'ms linear';
       riempi.style.width = '100%';
@@ -482,6 +517,7 @@
       vibra(20);
       attesa = setTimeout(function () {
         attesa = null;
+        tenutaAttiva = false;
         vibra([40, 60, 40]);
         segnaFatto(id, riquadro);
       }, TENUTA);
@@ -489,6 +525,7 @@
 
     function annulla() {
       if (attesa) { clearTimeout(attesa); attesa = null; }
+      tenutaAttiva = false;
       riempi.style.transition = 'width 150ms linear';
       riempi.style.width = '0';
       parola.textContent = testoIniziale;
@@ -501,6 +538,8 @@
   }
 
   function mostra(chiamate) {
+    // Mentre il dito preme non si ridisegna: il tasto sparirebbe da sotto il dito.
+    if (tenutaAttiva) return;
     var fila = filaScelta || leggi(K_FILA);
     var inizio = 'Fila ' + fila + ' · tavolo ';
     var mie = chiamate
@@ -636,6 +675,7 @@
     carica();
     if (!timer) timer = setInterval(carica, 8000);
     salvaPerServiceWorker();
+    aggiornaIscrizionePush();
     tieniAcceso();
   }
 
@@ -653,6 +693,7 @@
         disegnaFile();
         btnInizia.disabled = false;
         document.getElementById('guida-telegram').hidden = true;
+        document.getElementById('riga-telegram').classList.remove('acceso');
       });
       griglia.appendChild(b);
     });
