@@ -59,12 +59,12 @@
     return m + ' min fa';
   }
 
-  function segnaFatto(riga, bottone) {
+  function segnaFatto(id, bottone) {
     bottone.disabled = true;
     bottone.textContent = '...';
     fetch(backendUrl, {
       method: 'POST',
-      body: JSON.stringify({ azione: 'fatto', riga: riga })
+      body: JSON.stringify({ azione: 'fatto', id: id })
     }).then(function () { carica(); })
       .catch(function () { bottone.disabled = false; bottone.textContent = 'Fatto'; });
   }
@@ -83,7 +83,7 @@
 
     attive.forEach(function (c) {
       var div = document.createElement('div');
-      div.className = 'chiamata' + (!primoGiro && !righeViste[c.riga] ? ' nuova' : '');
+      div.className = 'chiamata' + (!primoGiro && !righeViste[c.id] ? ' nuova' : '');
       var info = document.createElement('div');
       info.style.flex = '1';
       var t = document.createElement('div');
@@ -93,11 +93,11 @@
       info.appendChild(t); info.appendChild(a);
       var b = document.createElement('button');
       b.className = 'fatto-btn'; b.textContent = 'Fatto';
-      b.addEventListener('click', function () { segnaFatto(c.riga, b); });
+      b.addEventListener('click', function () { segnaFatto(c.id, b); });
       div.appendChild(info); div.appendChild(b);
       contenuto.appendChild(div);
-      if (!primoGiro && !righeViste[c.riga] && navigator.vibrate) navigator.vibrate([200, 100, 200]);
-      righeViste[c.riga] = true;
+      if (!primoGiro && !righeViste[c.id] && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      righeViste[c.id] = true;
     });
 
     if (servite.length > 0) {
@@ -136,7 +136,7 @@
     .then(function (cfg) {
       backendUrl = (cfg.backendUrl || '').trim();
       if (!backendUrl) {
-        contenuto.innerHTML = '<div class="errore">Il backend non è ancora attivo.<br>Configuralo dalla <a href="admin.html">dashboard</a> seguendo le istruzioni in backend/README.md.</div>';
+        contenuto.innerHTML = '<div class="errore">Il backend non è ancora attivo.<br>Configuralo dalla <a href="admin.html">dashboard</a>.</div>';
         return;
       }
       carica();

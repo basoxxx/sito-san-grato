@@ -1,45 +1,27 @@
-# Backend "Chiama il cameriere" — istruzioni di attivazione
+# Backend "Chiama il cameriere" — Cloudflare Workers
 
-Costo: **zero**. Serve solo un account Google.
+Server dedicato, gratuito (100.000 richieste/giorno), sempre attivo.
+Database D1 (SQLite) incluso. Niente Google Sheets.
 
-## Come attivarlo (5 minuti)
+## API
 
-1. Vai su [sheets.google.com](https://sheets.google.com) e crea un foglio
-   chiamato **"Chiamate camerieri"** con le colonne: Ora | Tavolo | Stato
-2. Nel foglio: menu **Estensioni → Apps Script**
-3. Cancella il codice di esempio e incolla il contenuto di `Code.gs`
-4. Clicca **Distribuisci → Nuova distribuzione**
-   - Tipo: **App web**
-   - Esegui come: **Me**
-   - Chi ha accesso: **Chiunque**
-5. Copia l'**URL della web app** (finisce con `/exec`)
-6. Apri la dashboard (`admin.html` del sito):
-   - incolla l'URL nel campo "URL backend" e salva
-   - premi "Attiva sezione"
-7. Fatto! Online in 1-2 minuti.
+- `POST /` con `{"tavolo": "5"}` → registra una chiamata
+- `GET /?azione=lista` → ultime 100 chiamate
+- `POST /` con `{"azione": "fatto", "id": 12}` → segna come servita
 
-## Come funziona
+## Deploy (già fatto da Claude)
 
-- Il cliente apre il sito (link o QR unico, uguale per tutti),
-  in fondo al menù scrive il numero del suo tavolo
-  e preme "Chiama il cameriere"
-- Alla pressione, arriva una riga sul Foglio Google con ora e numero tavolo
-- I camerieri tengono aperto il foglio su un telefono/tablet e
-  segnano "FATTO" quando passano
+```bash
+npx wrangler login                      # login con l'account Cloudflare
+npx wrangler d1 create san-grato-chiamate   # crea il database (copia l'id in wrangler.toml)
+npx wrangler d1 execute san-grato-chiamate --remote --file=schema.sql
+npx wrangler deploy                     # pubblica il worker
+```
 
-## QR code
-
-Un solo QR per tutti i tavoli, che punta a:
-`https://basoxxx.github.io/sito-san-grato/`
+L'URL del worker va in `config.json` → `backendUrl`.
 
 ## Pagina chiamate per i camerieri
 
-I camerieri non devono usare il Foglio Google direttamente: c'è la pagina
 `https://basoxxx.github.io/sito-san-grato/chiamate.html`
-che mostra le chiamate in attesa (si aggiorna da sola ogni 10 secondi),
-con pulsante **Fatto** per segnarle come servite e vibrazione
-quando arriva una chiamata nuova.
-
-**Nota**: se avevi già distribuito una versione vecchia di `Code.gs`,
-incolla la versione aggiornata e ripubblica con
-**Distribuisci → Gestisci distribuzioni → Modifica → Nuova versione**.
+mostra le chiamate in attesa (aggiornamento automatico ogni 10 secondi),
+con pulsante **Fatto** e vibrazione alle nuove chiamate.
