@@ -42,8 +42,31 @@ npx wrangler d1 execute san-grato-chiamate --remote --file=schema.sql
 npx wrangler deploy
 ```
 
+## Notifiche ai camerieri
+
+Ogni cameriere apre `cameriere.html`, inserisce il codice staff, sceglie la sua
+fila e preme **Attiva notifiche**. Il telefono si registra al servizio di
+notifiche del sistema operativo e il Worker lo sveglia quando arriva una
+chiamata **della sua fila**.
+
+Dettagli tecnici:
+
+- Chiavi VAPID: pubblica in `wrangler.toml` (`VAPID_PUBLIC`), privata come
+  secret (`VAPID_PRIVATE`, formato JWK). Per rigenerarle serve reiscrivere
+  tutti i telefoni.
+- La notifica non contiene dati: e' solo una "sveglia". E' `sw.js` sul telefono
+  che poi chiede al server quali tavoli stanno chiamando.
+- Le iscrizioni stanno nella tabella `iscrizioni` (endpoint, fila). Quando il
+  servizio di notifiche risponde 404 o 410 l'iscrizione viene tolta da sola.
+- Su iPhone le notifiche funzionano **solo** se la pagina viene aggiunta alla
+  schermata Home (Condividi -> Aggiungi a Home) e con iOS 16.4 o piu' recente.
+  Su Android funzionano anche dal browser.
+- Con la pagina aperta il cameriere sente comunque suono e vibrazione, anche
+  senza notifiche di sistema.
+
 ## Pagine
 
-- Menù: `https://basoxxx.github.io/sito-san-grato/`
-- Camerieri: `.../chiamate.html` (serve il codice staff)
-- Gestione: `.../admin.html` (serve il codice gestore)
+- Menu: `https://basoxxx.github.io/sito-san-grato/`
+- Cameriere (una fila): `.../cameriere.html` — codice staff
+- Tutte le file (bar/cassa): `.../chiamate.html` — codice staff
+- Gestione: `.../admin.html` — codice gestore

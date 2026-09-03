@@ -118,6 +118,7 @@ async function avvisaFila(env, fila) {
       }
     } catch (e) {
       // una notifica fallita non deve bloccare le altre
+      console.log("notifica fallita:", e && e.message);
     }
   }
 }
