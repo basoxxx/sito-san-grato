@@ -42,6 +42,11 @@
     .pallino { width: 10px; height: 10px; border-radius: 50%; background: #C65B2E; }
     .pallino.ok { background: #3E8E4F; }
     .aggiornamento { text-align: center; font-size: 12px; color: #A98F5C; }
+    .guida { background: #FDF8E8; border: 3px dashed #E9A722; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .guida h3 { font-family: 'Corben', Georgia, serif; font-size: 16px; color: #C65B2E; margin: 0; text-align: center; }
+    .guida ol { margin: 0; padding-left: 22px; font-size: 14px; line-height: 1.7; }
+    .guida .nota { font-size: 12.5px; color: #8A6D3B; line-height: 1.5; }
+    .condividi { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; vertical-align: -5px; }
   </style>
 </head>
 <body>
@@ -72,6 +77,16 @@
     </div>
     <div class="stato-notifiche" id="stato-notifiche" hidden>
       <span class="pallino" id="pallino"></span><span id="testo-notifiche"></span>
+    </div>
+    <div class="guida" id="guida-iphone" hidden>
+      <h3>Per ricevere le notifiche su iPhone</h3>
+      <ol>
+        <li>Tocca <span class="condividi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 15V3m0 0L8 7m4-4 4 4" stroke="#C65B2E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" stroke="#C65B2E" stroke-width="2" stroke-linecap="round"/></svg></span> <b>Condividi</b>, in basso nel browser</li>
+        <li>Scorri e scegli <b>«Aggiungi a Home»</b></li>
+        <li>Chiudi il browser e apri <b>San Grato</b> dalla schermata Home</li>
+        <li>Lì premi <b>Attiva notifiche</b></li>
+      </ol>
+      <div class="nota">Si fa una volta sola. Dall'app dovrai reinserire il codice e la fila: iPhone tiene i due spazi separati.</div>
     </div>
     <div id="elenco"></div>
     <div class="aggiornamento" id="aggiornamento"></div>
@@ -216,9 +231,35 @@
     });
   }
 
-  btnNotifiche.addEventListener('click', attivaNotifiche);
+  // iPhone e iPad: Apple permette le notifiche web solo alle pagine aggiunte
+  // alla schermata Home. Non e' aggirabile via codice: si guida il cameriere.
+  function suApple() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  function comeApp() {
+    return window.navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  }
+
+  btnNotifiche.addEventListener('click', function () {
+    if (suApple() && !comeApp()) {
+      preparaAudio();
+      document.getElementById('guida-iphone').hidden = false;
+      mostraStatoNotifiche(false, 'Su iPhone serve un passaggio in piu\u0300');
+      btnNotifiche.hidden = true;
+      return;
+    }
+    attivaNotifiche();
+  });
 
   function controllaNotifiche() {
+    if (suApple() && !comeApp()) {
+      mostraStatoNotifiche(false, 'Su iPhone serve un passaggio in piu\u0300');
+      btnNotifiche.hidden = false;
+      btnNotifiche.textContent = 'Come attivarle';
+      return;
+    }
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !window.Notification) {
       mostraStatoNotifiche(false, 'Notifiche non supportate: tieni la pagina aperta');
       return;
