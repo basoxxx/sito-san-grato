@@ -20,16 +20,17 @@ Costo: **zero**. Serve solo un account Google.
 
 ## Come funziona
 
-- Il cliente inquadra il QR del suo tavolo (es. `...?tavolo=5`),
-  in fondo al menù trova il pulsante "Chiama il cameriere"
+- Il cliente apre il sito (link o QR unico, uguale per tutti),
+  in fondo al menù scrive il numero del suo tavolo
+  e preme "Chiama il cameriere"
 - Alla pressione, arriva una riga sul Foglio Google con ora e numero tavolo
 - I camerieri tengono aperto il foglio su un telefono/tablet e
   segnano "FATTO" quando passano
 
-## QR code per i tavoli
+## QR code
 
-Ogni tavolo ha il suo link:
-`https://basoxxx.github.io/sito-san-grato/?tavolo=1` (2, 3, ...)
+Un solo QR per tutti i tavoli, che punta a:
+`https://basoxxx.github.io/sito-san-grato/`
 
 ## Pagina chiamate per i camerieri
 
