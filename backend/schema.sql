@@ -11,3 +11,11 @@ CREATE TABLE IF NOT EXISTS impostazioni (
 );
 
 INSERT OR IGNORE INTO impostazioni (chiave, valore) VALUES ('chiamaCameriere', '0');
+
+CREATE TABLE IF NOT EXISTS iscrizioni (
+  endpoint TEXT PRIMARY KEY,
+  fila TEXT NOT NULL,
+  creata TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_iscrizioni_fila ON iscrizioni (fila);

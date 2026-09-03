@@ -6,3 +6,6 @@ compatibility_date = "2026-01-01"
 binding = "DB"
 database_name = "san-grato-chiamate"
 database_id = "3fc767c4-cb97-49e5-8b6c-3f6fb418b1dc"
+
+[vars]
+VAPID_PUBLIC = "BMQbLT5s843v5JTtlyz3pTiu0hxQqe3VbYAtYHqUvS70KdN-23LRG4ronanbZsRzhnpsXy5uFrlRn9RUYC8gmNM"

@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="San Grato">
+  <meta name="theme-color" content="#E9A722">
+  <link rel="manifest" href="manifest.json">
+  <title>Cameriere · San Grato</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛎️</text></svg>">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corben:wght@400;700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap">
+  <style>
+    [hidden] { display: none !important; }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; background: #FBF3DA; font-family: 'Nunito Sans', system-ui, sans-serif; color: #4A3B23; }
+    .wrap { max-width: 460px; margin: 0 auto; padding: 20px 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+    h1 { font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 26px; color: #E9A722; text-align: center; margin: 0; }
+    .sub { text-align: center; font-size: 13px; color: #8A6D3B; margin-top: -8px; }
+    .card { background: #FDF8E8; border: 3px solid #E9A722; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .card h2 { font-family: 'Corben', Georgia, serif; font-size: 18px; color: #E9A722; margin: 0; text-align: center; }
+    input[type=password] { min-height: 48px; font-size: 17px; font-weight: 700; text-align: center; padding: 0 12px; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; color: #4A3B23; }
+    button { min-height: 50px; padding: 0 20px; background: #E9A722; color: #FBF3DA; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 17px; border: none; border-radius: 14px; cursor: pointer; }
+    button:disabled { opacity: .5; }
+    button.ghost { background: transparent; color: #C65B2E; border: 2px dashed #E9A722; font-size: 14px; min-height: 42px; }
+    .msg { text-align: center; font-size: 13px; font-weight: 700; color: #C65B2E; min-height: 18px; }
+    .hint { font-size: 12.5px; line-height: 1.5; color: #8A6D3B; text-align: center; }
+    .file { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .file button { min-height: 60px; font-size: 24px; background: #FBF3DA; color: #4A3B23; border: 2px solid #E0C480; }
+    .barra { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .mia-fila { font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 30px; color: #FBF3DA; background: #E9A722; border-radius: 16px; padding: 8px 22px 4px; }
+    .chiamata { background: #FDF8E8; border: 4px solid #C65B2E; border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 16px; }
+    .chiamata.nuova { animation: lampeggia .8s ease-in-out 4; }
+    @keyframes lampeggia { 50% { background: #F8E3C0; } }
+    .numero { font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 46px; line-height: 1; color: #4A3B23; }
+    .attesa { font-size: 13px; font-weight: 800; color: #C65B2E; margin-top: 4px; }
+    .fatto { min-width: 110px; min-height: 62px; background: #3E8E4F; font-size: 18px; }
+    .vuoto { text-align: center; font-size: 16px; font-weight: 600; color: #8A6D3B; padding: 30px 10px; }
+    .stato-notifiche { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 700; }
+    .pallino { width: 10px; height: 10px; border-radius: 50%; background: #C65B2E; }
+    .pallino.ok { background: #3E8E4F; }
+    .aggiornamento { text-align: center; font-size: 12px; color: #A98F5C; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Servizio ai tavoli</h1>
+  <div class="sub">San Grato · Rivara 2026</div>
+
+  <!-- 1. CODICE -->
+  <div class="card" id="passo-codice" hidden>
+    <h2>Codice staff</h2>
+    <input type="password" id="codice-input" placeholder="SG-..." autocomplete="off">
+    <button id="btn-codice">Entra</button>
+    <div class="msg" id="msg-codice"></div>
+  </div>
+
+  <!-- 2. SCELTA FILA -->
+  <div class="card" id="passo-fila" hidden>
+    <h2>Qual è la tua fila?</h2>
+    <div class="file" id="griglia-file"></div>
+    <div class="hint">Riceverai le chiamate solo dei tavoli della fila che scegli.</div>
+  </div>
+
+  <!-- 3. SERVIZIO -->
+  <div id="passo-servizio" hidden>
+    <div class="barra">
+      <span class="mia-fila" id="etichetta-fila">–</span>
+      <button class="ghost" id="btn-notifiche">Attiva notifiche</button>
+    </div>
+    <div class="stato-notifiche" id="stato-notifiche" hidden>
+      <span class="pallino" id="pallino"></span><span id="testo-notifiche"></span>
+    </div>
+    <div id="elenco"></div>
+    <div class="aggiornamento" id="aggiornamento"></div>
+    <div style="display:flex; gap:10px; margin-top:6px;">
+      <button class="ghost" id="btn-cambia" style="flex:1">Cambia fila</button>
+      <button class="ghost" id="btn-esci" style="flex:1">Esci</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var K_CODICE = 'sg_staff_code';
+  var K_FILA = 'sg_fila';
+  var FILE = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+  var backendUrl = '';
+  var chiaveVapid = '';
+  var idVisti = {};
+  var primoGiro = true;
+  var timer = null;
+  var audio = null;
+  var blocco = null;
+
+  var passoCodice = document.getElementById('passo-codice');
+  var passoFila = document.getElementById('passo-fila');
+  var passoServizio = document.getElementById('passo-servizio');
+  var elenco = document.getElementById('elenco');
+  var aggiornamento = document.getElementById('aggiornamento');
+  var msgCodice = document.getElementById('msg-codice');
+  var btnNotifiche = document.getElementById('btn-notifiche');
+  var statoNotifiche = document.getElementById('stato-notifiche');
+  var pallino = document.getElementById('pallino');
+  var testoNotifiche = document.getElementById('testo-notifiche');
+
+  function leggi(chiave) { try { return localStorage.getItem(chiave) || ''; } catch (e) { return ''; } }
+  function scrivi(chiave, valore) { try { localStorage.setItem(chiave, valore); } catch (e) {} }
+  function cancella(chiave) { try { localStorage.removeItem(chiave); } catch (e) {} }
+
+  // ---------- suono e vibrazione ----------
+  function preparaAudio() {
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx && !audio) audio = new Ctx();
+      if (audio && audio.state === 'suspended') audio.resume();
+    } catch (e) {}
+  }
+
+  function campanello() {
+    try {
+      if (!audio) return;
+      [0, 0.18].forEach(function (ritardo) {
+        var osc = audio.createOscillator();
+        var vol = audio.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        vol.gain.setValueAtTime(0.0001, audio.currentTime + ritardo);
+        vol.gain.exponentialRampToValueAtTime(0.35, audio.currentTime + ritardo + 0.02);
+        vol.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + ritardo + 0.15);
+        osc.connect(vol); vol.connect(audio.destination);
+        osc.start(audio.currentTime + ritardo);
+        osc.stop(audio.currentTime + ritardo + 0.16);
+      });
+    } catch (e) {}
+  }
+
+  // Tiene acceso lo schermo mentre la pagina e' in primo piano.
+  function tieniAcceso() {
+    try {
+      if ('wakeLock' in navigator && !blocco) {
+        navigator.wakeLock.request('screen').then(function (b) { blocco = b; }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') { blocco = null; tieniAcceso(); }
+  });
+
+  // ---------- notifiche push ----------
+  function daBase64(base64) {
+    var pieno = (base64 + '='.repeat((4 - base64.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+    var grezzo = atob(pieno);
+    var byte = new Uint8Array(grezzo.length);
+    for (var i = 0; i < grezzo.length; i++) byte[i] = grezzo.charCodeAt(i);
+    return byte;
+  }
+
+  function salvaPerServiceWorker() {
+    if (!('caches' in window)) return Promise.resolve();
+    return caches.open('sg-cameriere').then(function (deposito) {
+      return deposito.put('config', new Response(JSON.stringify({
+        backendUrl: backendUrl, codice: leggi(K_CODICE), fila: leggi(K_FILA)
+      })));
+    }).catch(function () {});
+  }
+
+  function mostraStatoNotifiche(attive, messaggio) {
+    statoNotifiche.hidden = false;
+    pallino.className = 'pallino' + (attive ? ' ok' : '');
+    testoNotifiche.textContent = messaggio;
+    btnNotifiche.hidden = attive;
+  }
+
+  function attivaNotifiche() {
+    preparaAudio();
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      mostraStatoNotifiche(false, 'Notifiche non supportate: tieni la pagina aperta');
+      return;
+    }
+    Notification.requestPermission().then(function (permesso) {
+      if (permesso !== 'granted') {
+        mostraStatoNotifiche(false, 'Permesso negato: tieni la pagina aperta');
+        return;
+      }
+      navigator.serviceWorker.register('sw.js')
+        .then(function (reg) { return navigator.serviceWorker.ready.then(function () { return reg; }); })
+        .then(function (reg) {
+          return reg.pushManager.getSubscription().then(function (esistente) {
+            if (esistente) return esistente;
+            return reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: daBase64(chiaveVapid)
+            });
+          });
+        })
+        .then(function (iscrizione) {
+          return salvaPerServiceWorker().then(function () {
+            return fetch(backendUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + leggi(K_CODICE) },
+              body: JSON.stringify({ azione: 'iscrizione', endpoint: iscrizione.endpoint, fila: leggi(K_FILA) })
+            });
+          });
+        })
+        .then(function (r) {
+          if (r && r.ok) mostraStatoNotifiche(true, 'Notifiche attive per la fila ' + leggi(K_FILA));
+          else mostraStatoNotifiche(false, 'Attivazione non riuscita, riprova');
+        })
+        .catch(function () {
+          mostraStatoNotifiche(false, 'Notifiche non attivabili: tieni la pagina aperta');
+        });
+    });
+  }
+
+  btnNotifiche.addEventListener('click', attivaNotifiche);
+
+  function controllaNotifiche() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !window.Notification) {
+      mostraStatoNotifiche(false, 'Notifiche non supportate: tieni la pagina aperta');
+      return;
+    }
+    if (Notification.permission !== 'granted') { btnNotifiche.hidden = false; statoNotifiche.hidden = true; return; }
+    navigator.serviceWorker.getRegistration().then(function (reg) {
+      if (!reg) { btnNotifiche.hidden = false; return; }
+      reg.pushManager.getSubscription().then(function (iscrizione) {
+        if (iscrizione) { mostraStatoNotifiche(true, 'Notifiche attive per la fila ' + leggi(K_FILA)); salvaPerServiceWorker(); }
+        else btnNotifiche.hidden = false;
+      });
+    }).catch(function () {});
+  }
+
+  // ---------- elenco chiamate della mia fila ----------
+  function minutiFa(iso) {
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    var m = Math.max(0, Math.round((Date.now() - d.getTime()) / 60000));
+    return m === 0 ? 'adesso' : m + " min fa";
+  }
+
+  function segnaFatto(id, bottone) {
+    bottone.disabled = true;
+    bottone.textContent = '...';
+    fetch(backendUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + leggi(K_CODICE) },
+      body: JSON.stringify({ azione: 'fatto', id: id })
+    }).then(function (r) {
+      if (r.status === 401) { chiediCodice('Codice non valido.'); return; }
+      carica();
+    }).catch(function () { bottone.disabled = false; bottone.textContent = 'Fatto'; });
+  }
+
+  function mostra(chiamate) {
+    var fila = leggi(K_FILA);
+    var inizio = 'Fila ' + fila + ' · tavolo ';
+    var mie = chiamate
+      .filter(function (c) { return c.stato !== 'FATTO' && String(c.tavolo).indexOf(inizio) === 0; })
+      .sort(function (a, b) { return a.id - b.id; });
+
+    elenco.innerHTML = '';
+    if (mie.length === 0) {
+      var v = document.createElement('div');
+      v.className = 'vuoto';
+      v.textContent = 'Nessuna chiamata ✓';
+      elenco.appendChild(v);
+    }
+
+    var nuove = 0;
+    mie.forEach(function (c) {
+      var nuova = !primoGiro && !idVisti[c.id];
+      if (nuova) nuove++;
+      var riga = document.createElement('div');
+      riga.className = 'chiamata' + (nuova ? ' nuova' : '');
+      riga.style.marginBottom = '10px';
+      var info = document.createElement('div');
+      info.style.flex = '1';
+      var n = document.createElement('div');
+      n.className = 'numero';
+      n.textContent = String(c.tavolo).slice(inizio.length);
+      var t = document.createElement('div');
+      t.className = 'attesa';
+      t.textContent = minutiFa(c.ora);
+      info.appendChild(n); info.appendChild(t);
+      var b = document.createElement('button');
+      b.className = 'fatto';
+      b.textContent = 'Fatto';
+      b.addEventListener('click', function () { segnaFatto(c.id, b); });
+      riga.appendChild(info); riga.appendChild(b);
+      elenco.appendChild(riga);
+      if (document.visibilityState === 'visible') idVisti[c.id] = true;
+    });
+
+    if (nuove > 0) {
+      campanello();
+      if (navigator.vibrate) navigator.vibrate([300, 120, 300]);
+    }
+
+    document.title = (mie.length > 0 ? '(' + mie.length + ') ' : '') + 'Cameriere · San Grato';
+    var ora = new Date();
+    aggiornamento.textContent = 'Aggiornato alle ' +
+      ('0' + ora.getHours()).slice(-2) + ':' + ('0' + ora.getMinutes()).slice(-2);
+    primoGiro = false;
+  }
+
+  function carica() {
+    if (!backendUrl || !leggi(K_CODICE) || !leggi(K_FILA)) return;
+    fetch(backendUrl + '?azione=lista&v=' + Date.now(), {
+      headers: { 'Authorization': 'Bearer ' + leggi(K_CODICE) }
+    })
+      .then(function (r) {
+        if (r.status === 401) { chiediCodice('Codice non valido o cambiato.'); return null; }
+        return r.json();
+      })
+      .then(function (j) { if (j && j.ok) mostra(j.chiamate || []); })
+      .catch(function () { aggiornamento.textContent = 'Connessione assente, riprovo...'; });
+  }
+
+  // ---------- passaggi ----------
+  function fermaTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+  function chiediCodice(messaggio) {
+    fermaTimer();
+    cancella(K_CODICE);
+    passoCodice.hidden = false;
+    passoFila.hidden = true;
+    passoServizio.hidden = true;
+    msgCodice.textContent = messaggio || '';
+  }
+
+  function chiediFila() {
+    fermaTimer();
+    passoCodice.hidden = true;
+    passoFila.hidden = false;
+    passoServizio.hidden = true;
+  }
+
+  function avviaServizio() {
+    passoCodice.hidden = true;
+    passoFila.hidden = true;
+    passoServizio.hidden = false;
+    document.getElementById('etichetta-fila').textContent = leggi(K_FILA);
+    primoGiro = true;
+    idVisti = {};
+    carica();
+    if (!timer) timer = setInterval(carica, 8000);
+    controllaNotifiche();
+    salvaPerServiceWorker();
+    tieniAcceso();
+  }
+
+  FILE.forEach(function (f) {
+    var b = document.createElement('button');
+    b.textContent = f;
+    b.addEventListener('click', function () {
+      preparaAudio();
+      scrivi(K_FILA, f);
+      avviaServizio();
+    });
+    document.getElementById('griglia-file').appendChild(b);
+  });
+
+  document.getElementById('btn-codice').addEventListener('click', function () {
+    var c = document.getElementById('codice-input').value.trim();
+    if (!c) { msgCodice.textContent = 'Inserisci il codice.'; return; }
+    preparaAudio();
+    msgCodice.textContent = 'Verifica...';
+    fetch(backendUrl + '?azione=lista&v=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + c } })
+      .then(function (r) {
+        if (!r.ok) { msgCodice.textContent = 'Codice non valido.'; return; }
+        scrivi(K_CODICE, c);
+        document.getElementById('codice-input').value = '';
+        msgCodice.textContent = '';
+        if (leggi(K_FILA)) avviaServizio(); else chiediFila();
+      })
+      .catch(function () { msgCodice.textContent = 'Connessione assente.'; });
+  });
+
+  document.getElementById('btn-cambia').addEventListener('click', chiediFila);
+  document.getElementById('btn-esci').addEventListener('click', function () {
+    cancella(K_FILA);
+    chiediCodice('');
+  });
+
+  // ---------- avvio ----------
+  fetch('config.json?v=' + Date.now())
+    .then(function (r) { return r.json(); })
+    .then(function (cfg) {
+      backendUrl = (cfg.backendUrl || '').trim();
+      return fetch(backendUrl + '?azione=vapid').then(function (r) { return r.json(); });
+    })
+    .then(function (v) {
+      chiaveVapid = (v && v.chiave) || '';
+      if (!leggi(K_CODICE)) chiediCodice('');
+      else if (!leggi(K_FILA)) chiediFila();
+      else avviaServizio();
+    })
+    .catch(function () { chiediCodice('Server non raggiungibile.'); });
+})();
+</script>
+</body>
+</html>

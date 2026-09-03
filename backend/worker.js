@@ -56,8 +56,74 @@ async function sezioneAttiva(env) {
   return !!riga && riga.valore === "1";
 }
 
+// ---------- NOTIFICHE PUSH (VAPID) ----------
+
+function base64url(buffer) {
+  let binario = "";
+  const byte = new Uint8Array(buffer);
+  for (let i = 0; i < byte.length; i++) binario += String.fromCharCode(byte[i]);
+  return btoa(binario).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
+
+async function firmaVapid(env, destinatario) {
+  const testo = new TextEncoder();
+  const testa = base64url(testo.encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
+  const corpo = base64url(
+    testo.encode(
+      JSON.stringify({
+        aud: destinatario,
+        exp: Math.floor(Date.now() / 1000) + 12 * 3600,
+        sub: ORIGINE_CONSENTITA + "/sito-san-grato/",
+      })
+    )
+  );
+  const chiave = await crypto.subtle.importKey(
+    "jwk",
+    JSON.parse(env.VAPID_PRIVATE),
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"]
+  );
+  const firma = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    chiave,
+    testo.encode(testa + "." + corpo)
+  );
+  return testa + "." + corpo + "." + base64url(firma);
+}
+
+// Sveglia i telefoni dei camerieri di quella fila. Nessun dato viaggia nella
+// notifica: il telefono, una volta svegliato, chiede al server cosa e' arrivato.
+async function avvisaFila(env, fila) {
+  const { results } = await env.DB.prepare(
+    "SELECT endpoint FROM iscrizioni WHERE fila = ?"
+  ).bind(fila).all();
+
+  const firmePerServizio = {};
+  for (const riga of results) {
+    try {
+      const servizio = new URL(riga.endpoint).origin;
+      if (!firmePerServizio[servizio]) firmePerServizio[servizio] = await firmaVapid(env, servizio);
+      const risposta = await fetch(riga.endpoint, {
+        method: "POST",
+        headers: {
+          TTL: "120",
+          Urgency: "high",
+          Authorization: "vapid t=" + firmePerServizio[servizio] + ", k=" + env.VAPID_PUBLIC,
+        },
+      });
+      // Iscrizione non piu' valida (telefono cambiato, app disinstallata): la tolgo.
+      if (risposta.status === 404 || risposta.status === 410) {
+        await env.DB.prepare("DELETE FROM iscrizioni WHERE endpoint = ?").bind(riga.endpoint).run();
+      }
+    } catch (e) {
+      // una notifica fallita non deve bloccare le altre
+    }
+  }
+}
+
 export default {
-  async fetch(richiesta, env) {
+  async fetch(richiesta, env, ctx) {
     if (richiesta.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: intestazioniCors(richiesta) });
     }
@@ -81,6 +147,10 @@ export default {
           "SELECT id, ora, tavolo, stato FROM chiamate ORDER BY id DESC LIMIT 100"
         ).all();
         return json({ ok: true, chiamate: results }, 200, richiesta);
+      }
+
+      if (azioneGet === "vapid") {
+        return json({ ok: true, chiave: env.VAPID_PUBLIC || "" }, 200, richiesta);
       }
 
       return json({ ok: true, servizio: "San Grato" }, 200, richiesta);
@@ -115,6 +185,32 @@ export default {
         return json({ ok: true, chiamaCameriere: valore === "1" }, 200, richiesta);
       }
 
+      // Il cameriere accende le notifiche per la sua fila.
+      if (dati.azione === "iscrizione") {
+        if (!autorizzato(richiesta, env.TOKEN_STAFF)) {
+          return json({ ok: false, errore: "codice non valido" }, 401, richiesta);
+        }
+        const endpoint = String(dati.endpoint || "");
+        const fila = String(dati.fila || "").toUpperCase();
+        if (!/^https:\/\//.test(endpoint) || endpoint.length > 500 || !/^[A-H]$/.test(fila)) {
+          return json({ ok: false, errore: "dati non validi" }, 400, richiesta);
+        }
+        await env.DB.prepare(
+          "INSERT INTO iscrizioni (endpoint, fila, creata) VALUES (?, ?, ?) " +
+            "ON CONFLICT(endpoint) DO UPDATE SET fila = excluded.fila"
+        ).bind(endpoint, fila, new Date().toISOString()).run();
+        return json({ ok: true }, 200, richiesta);
+      }
+
+      if (dati.azione === "disiscrizione") {
+        if (!autorizzato(richiesta, env.TOKEN_STAFF)) {
+          return json({ ok: false, errore: "codice non valido" }, 401, richiesta);
+        }
+        await env.DB.prepare("DELETE FROM iscrizioni WHERE endpoint = ?")
+          .bind(String(dati.endpoint || "")).run();
+        return json({ ok: true }, 200, richiesta);
+      }
+
       // Segna una chiamata come servita (staff).
       if (dati.azione === "fatto") {
         if (!autorizzato(richiesta, env.TOKEN_STAFF)) {
@@ -145,6 +241,11 @@ export default {
       await env.DB.prepare(
         "INSERT INTO chiamate (ora, tavolo, stato) VALUES (?, ?, 'IN ATTESA')"
       ).bind(new Date().toISOString(), tavolo).run();
+
+      // Avvisa i telefoni dei camerieri di quella fila senza far aspettare il cliente.
+      const fila = tavolo.charAt(5);
+      ctx.waitUntil(avvisaFila(env, fila));
+
       return json({ ok: true }, 200, richiesta);
     }
 
