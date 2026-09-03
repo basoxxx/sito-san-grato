@@ -68,7 +68,7 @@
   // "Fila B · tavolo 14" -> { fila: "B", numero: "14" }
   function analizza(testo) {
     var m = /^Fila ([A-H])(?:\s*·\s*tavolo\s*(.+))?$/.exec(testo || '');
-    if (m) return { fila: m[1], numero: m[2] || '?' };
+    if (m) return { fila: m[1], numero: m[2] || '—' };
     return { fila: null, numero: testo || '?' };
   }
 
@@ -80,6 +80,33 @@
       body: JSON.stringify({ azione: 'fatto', id: id })
     }).then(function () { carica(); })
       .catch(function () { bottone.disabled = false; bottone.textContent = 'Fatto'; });
+  }
+
+  function creaCard(e, orizzontale) {
+    var nuova = !primoGiro && !idVisti[e.c.id];
+    var card = document.createElement('div');
+    card.className = 'card' + (nuova ? ' nuova' : '');
+    var n = document.createElement('div');
+    n.className = 'numero'; n.textContent = e.numero;
+    var t = document.createElement('div');
+    t.className = 'tempo'; t.textContent = minutiFa(e.c.ora);
+    var b = document.createElement('button');
+    b.className = 'fatto-btn'; b.textContent = 'Fatto';
+    b.addEventListener('click', function () { segnaFatto(e.c.id, b); });
+    if (orizzontale) {
+      card.style.flexDirection = 'row';
+      card.style.justifyContent = 'space-between';
+      card.style.alignItems = 'center';
+      card.style.padding = '8px 12px';
+      n.style.fontSize = '16px';
+      b.style.width = 'auto'; b.style.padding = '0 18px';
+    }
+    card.appendChild(n); card.appendChild(t); card.appendChild(b);
+    if (nuova && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    // Segna la chiamata come "vista" solo se lo schermo e' davvero acceso su questa
+    // pagina: altrimenti la vibrazione viene ignorata e il lampeggio finisce inosservato.
+    if (document.visibilityState === 'visible') idVisti[e.c.id] = true;
+    return card;
   }
 
   function mostra(chiamate) {
@@ -107,19 +134,7 @@
       testa.textContent = f;
       col.appendChild(testa);
       perFila[f].forEach(function (e) {
-        var card = document.createElement('div');
-        card.className = 'card' + (!primoGiro && !idVisti[e.c.id] ? ' nuova' : '');
-        var n = document.createElement('div');
-        n.className = 'numero'; n.textContent = e.numero;
-        var t = document.createElement('div');
-        t.className = 'tempo'; t.textContent = minutiFa(e.c.ora);
-        var b = document.createElement('button');
-        b.className = 'fatto-btn'; b.textContent = 'Fatto';
-        b.addEventListener('click', function () { segnaFatto(e.c.id, b); });
-        card.appendChild(n); card.appendChild(t); card.appendChild(b);
-        col.appendChild(card);
-        if (!primoGiro && !idVisti[e.c.id] && navigator.vibrate) navigator.vibrate([200, 100, 200]);
-        idVisti[e.c.id] = true;
+        col.appendChild(creaCard(e, false));
       });
       griglia.appendChild(col);
     });
@@ -137,22 +152,7 @@
       h.textContent = 'Altre chiamate';
       contenuto.appendChild(h);
       altre.forEach(function (e) {
-        var card = document.createElement('div');
-        card.className = 'card';
-        card.style.flexDirection = 'row';
-        card.style.justifyContent = 'space-between';
-        card.style.padding = '8px 12px';
-        var n = document.createElement('div');
-        n.className = 'numero'; n.style.fontSize = '16px'; n.textContent = e.numero;
-        var t = document.createElement('div');
-        t.className = 'tempo'; t.textContent = minutiFa(e.c.ora);
-        var b = document.createElement('button');
-        b.className = 'fatto-btn'; b.style.width = 'auto'; b.style.padding = '0 18px';
-        b.textContent = 'Fatto';
-        b.addEventListener('click', function () { segnaFatto(e.c.id, b); });
-        card.appendChild(n); card.appendChild(t); card.appendChild(b);
-        contenuto.appendChild(card);
-        idVisti[e.c.id] = true;
+        contenuto.appendChild(creaCard(e, true));
       });
     }
 
