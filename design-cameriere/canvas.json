@@ -1,0 +1,13 @@
+{
+  "artboards": [
+    { "file": "Ingresso.dc.html", "x": 0, "y": 0, "w": 390, "h": 844, "title": "1 · Ingresso (sera)" },
+    { "file": "Main.dc.html", "x": 490, "y": 0, "w": 390, "h": 844, "title": "2 · Servizio (sera)", "is_interactive": true },
+    { "file": "Giorno.dc.html", "x": 980, "y": 0, "w": 390, "h": 844, "title": "3 · Servizio (giorno)" }
+  ],
+  "annotations": [
+    { "id": "nota-buio", "x": 0, "y": -150, "w": 390, "text": "TEMA SERA\nLa festa è di sera: fondo scuro, meno abbagliante e più leggibile al buio. Consuma anche meno batteria sugli schermi OLED." },
+    { "id": "nota-premi", "x": 490, "y": -150, "w": 390, "text": "PROVALO\nTieni premuto il tasto verde per confermare «servito»: evita i tocchi per sbaglio col telefono in tasca o sul vassoio. Il colore del bordo dice da quanto aspetta il tavolo." },
+    { "id": "nota-giorno", "x": 980, "y": -150, "w": 390, "text": "TEMA GIORNO\nStessa schermata con i colori della locandina, per il servizio a pranzo o all'aperto." }
+  ],
+  "launch": { "view": "canvas" }
+}

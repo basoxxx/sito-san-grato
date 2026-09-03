@@ -7,134 +7,297 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="San Grato">
-  <meta name="theme-color" content="#E9A722">
+  <meta name="theme-color" content="#14100A">
   <link rel="manifest" href="manifest.json">
   <title>Cameriere · San Grato</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛎️</text></svg>">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corben:wght@400;700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corben:wght@400;700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap">
   <style>
+    /* Tema sera: la festa e' di sera, il fondo scuro non abbaglia e si legge meglio. */
+    :root {
+      --fondo: #14100A; --carta: #241D12; --carta2: #1B1710;
+      --testo: #F6E7C4; --tenue: #9C8A65; --tenue2: #6E5F42; --bordo: #3A3020;
+      --oro: #E9A722; --su-oro: #14100A;
+      --verde: #4FA463; --verde-linea: #3E7F4F; --su-verde: #EAF6EC;
+      --rosso: #D64A2D; --alone: rgba(214,74,45,0.18);
+    }
+    [data-tema="giorno"] {
+      --fondo: #FBF3DA; --carta: #FDF8E8; --carta2: #FBF3DA;
+      --testo: #4A3B23; --tenue: #8A6D3B; --tenue2: #A98F5C; --bordo: #E0C480;
+      --oro: #E9A722; --su-oro: #FBF3DA;
+      --verde: #3E8E4F; --verde-linea: #3E8E4F; --su-verde: #EAF6EC;
+      --rosso: #C65B2E; --alone: rgba(198,91,46,0.18);
+    }
+
     [hidden] { display: none !important; }
-    * { -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; background: #FBF3DA; font-family: 'Nunito Sans', system-ui, sans-serif; color: #4A3B23; }
-    .wrap { max-width: 460px; margin: 0 auto; padding: 20px 16px 40px; display: flex; flex-direction: column; gap: 14px; }
-    h1 { font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 26px; color: #E9A722; text-align: center; margin: 0; }
-    .sub { text-align: center; font-size: 13px; color: #8A6D3B; margin-top: -8px; }
-    .card { background: #FDF8E8; border: 3px solid #E9A722; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-    .card h2 { font-family: 'Corben', Georgia, serif; font-size: 18px; color: #E9A722; margin: 0; text-align: center; }
-    input[type=password] { min-height: 48px; font-size: 17px; font-weight: 700; text-align: center; padding: 0 12px; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; color: #4A3B23; }
-    button { min-height: 50px; padding: 0 20px; background: #E9A722; color: #FBF3DA; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 17px; border: none; border-radius: 14px; cursor: pointer; }
-    button:disabled { opacity: .5; }
-    button.ghost { background: transparent; color: #C65B2E; border: 2px dashed #E9A722; font-size: 14px; min-height: 42px; }
-    .msg { text-align: center; font-size: 13px; font-weight: 700; color: #C65B2E; min-height: 18px; }
-    .hint { font-size: 12.5px; line-height: 1.5; color: #8A6D3B; text-align: center; }
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; background: var(--fondo); color: var(--testo);
+      font-family: 'Nunito Sans', system-ui, sans-serif;
+      display: flex; flex-direction: column;
+    }
+    .schermo { max-width: 460px; width: 100%; margin: 0 auto; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+    button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    .primario {
+      min-height: 56px; width: 100%; border-radius: 16px; background: var(--oro); color: var(--su-oro);
+      font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px;
+    }
+    .primario:disabled { opacity: .45; }
+    .fantasma {
+      min-height: 48px; border-radius: 14px; border: 2px dashed var(--bordo);
+      color: var(--tenue); font-weight: 800; font-size: 14px;
+    }
+
+    /* ---------- accesso ---------- */
+    .centro { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 26px 20px; gap: 18px; }
+    .marchio { text-align: center; }
+    .marchio .nome { font-family: 'Corben', Georgia, serif; font-size: 30px; color: var(--oro); line-height: 1.1; }
+    .marchio .luogo { font-size: 12.5px; color: var(--tenue2); margin-top: 6px; }
+    input[type=password] {
+      min-height: 54px; width: 100%; font-size: 18px; font-weight: 700; text-align: center;
+      background: var(--carta); border: 2px solid var(--bordo); border-radius: 14px; color: var(--testo);
+    }
+    .errore { text-align: center; font-size: 13px; font-weight: 700; color: var(--rosso); min-height: 18px; }
+
+    /* ---------- ingresso: fila + avvisi ---------- */
+    .sezione { display: flex; flex-direction: column; gap: 10px; }
+    .passo { font-size: 13px; font-weight: 800; color: var(--tenue); letter-spacing: 0.5px; }
     .file { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-    .file button { min-height: 60px; font-size: 24px; background: #FBF3DA; color: #4A3B23; border: 2px solid #E0C480; }
-    .barra { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .mia-fila { font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 30px; color: #FBF3DA; background: #E9A722; border-radius: 16px; padding: 8px 22px 4px; }
-    .chiamata { background: #FDF8E8; border: 4px solid #C65B2E; border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 16px; }
-    .chiamata.nuova { animation: lampeggia .8s ease-in-out 4; }
-    @keyframes lampeggia { 50% { background: #F8E3C0; } }
-    .numero { font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 46px; line-height: 1; color: #4A3B23; }
-    .attesa { font-size: 13px; font-weight: 800; color: #C65B2E; margin-top: 4px; }
-    .fatto { min-width: 110px; min-height: 62px; background: #3E8E4F; font-size: 18px; }
-    .vuoto { text-align: center; font-size: 16px; font-weight: 600; color: #8A6D3B; padding: 30px 10px; }
-    .stato-notifiche { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 700; }
-    .pallino { width: 10px; height: 10px; border-radius: 50%; background: #C65B2E; }
-    .pallino.ok { background: #3E8E4F; }
-    .aggiornamento { text-align: center; font-size: 12px; color: #A98F5C; }
-    .guida { background: #FDF8E8; border: 3px dashed #E9A722; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-    .guida h3 { font-family: 'Corben', Georgia, serif; font-size: 16px; color: #C65B2E; margin: 0; text-align: center; }
-    .guida ol { margin: 0; padding-left: 22px; font-size: 14px; line-height: 1.7; }
-    .guida .nota { font-size: 12.5px; color: #8A6D3B; line-height: 1.5; }
-    .condividi { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; vertical-align: -5px; }
+    .file button {
+      min-height: 66px; border-radius: 16px; background: var(--carta); border: 2px solid var(--bordo);
+      color: var(--tenue); font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 26px;
+    }
+    .file button.scelta { background: var(--oro); border-color: var(--oro); color: var(--su-oro); }
+    .spiega { font-size: 12px; color: var(--tenue2); line-height: 1.5; }
+
+    .avviso-riga {
+      width: 100%; background: var(--carta2); border: 2px solid var(--bordo); border-radius: 18px;
+      padding: 14px; display: flex; align-items: center; gap: 12px; text-align: left; min-height: 72px;
+    }
+    .avviso-riga.acceso { background: var(--carta); border-color: var(--oro); }
+    .avviso-riga .icona { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .avviso-riga .testi { flex: 1; min-width: 0; }
+    .avviso-riga .titolo { display: block; font-weight: 800; font-size: 14.5px; color: var(--testo); }
+    .avviso-riga .sotto { display: block; font-size: 11.5px; color: var(--tenue); margin-top: 2px; }
+    .avviso-riga .azione { font-size: 12px; font-weight: 800; color: var(--oro); flex-shrink: 0; }
+    .spunta { width: 26px; height: 26px; border-radius: 50%; background: var(--verde); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    /* ---------- servizio ---------- */
+    .testa { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 12px; gap: 12px; }
+    .mia-fila {
+      font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 34px; line-height: 1;
+      color: var(--su-oro); background: var(--oro); border-radius: 16px; padding: 10px 20px 6px;
+    }
+    .quanti { font-size: 15px; font-weight: 800; color: var(--testo); }
+    .stato { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+    .pallino { width: 8px; height: 8px; border-radius: 50%; background: var(--verde); flex-shrink: 0; }
+    .pallino.spento { background: var(--tenue2); }
+    .stato span { font-size: 11.5px; font-weight: 700; color: var(--tenue); }
+    .tasto-tema { width: 44px; height: 44px; border-radius: 14px; border: 2px solid var(--bordo); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    .elenco { flex: 1; overflow-y: auto; padding: 0 18px 8px; display: flex; flex-direction: column; gap: 14px; -webkit-overflow-scrolling: touch; }
+
+    .chiamata { background: var(--carta); border: 3px solid var(--verde); border-radius: 22px; padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 12px; }
+    .chiamata.media { border-color: var(--oro); }
+    .chiamata.urgente { border-color: var(--rosso); animation: respiro 1.8s ease-in-out infinite; }
+    @keyframes respiro { 0%, 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } 50% { box-shadow: 0 0 0 6px var(--alone); } }
+    .chiamata.nuova { animation: entrata .5s ease-out; }
+    @keyframes entrata { from { transform: scale(.96); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+
+    .riga-tavolo { display: flex; align-items: center; gap: 14px; }
+    .etichetta { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: var(--tenue); }
+    .numero { font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 58px; line-height: 0.9; color: var(--testo); }
+    .tempo { font-family: 'Corben', Georgia, serif; font-size: 20px; font-weight: 700; }
+    .tempo-nota { font-size: 11px; font-weight: 700; color: var(--tenue); }
+
+    .conferma {
+      position: relative; width: 100%; min-height: 56px; border-radius: 16px;
+      background: var(--carta2); border: 2px solid var(--verde-linea); overflow: hidden;
+      touch-action: manipulation; user-select: none; -webkit-user-select: none;
+    }
+    .conferma .riempi { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--verde-linea); }
+    .conferma .dentro { position: relative; min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .conferma .parola { font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 16px; color: var(--su-verde); }
+
+    .riposo { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 50px 20px; text-align: center; }
+    .riposo .frase { font-family: 'Corben', Georgia, serif; font-size: 20px; color: var(--tenue2); }
+    .riposo .sotto { font-size: 13px; color: var(--tenue2); line-height: 1.5; }
+
+    .fondo-barra { display: flex; gap: 10px; padding: 12px 18px 22px; border-top: 1px solid var(--bordo); background: var(--fondo); }
+    .fondo-barra .fantasma { flex: 1; }
+    .aggiornato { text-align: center; font-size: 11.5px; color: var(--tenue2); padding-bottom: 6px; }
+
+    .guida { background: var(--carta); border: 2px dashed var(--oro); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .guida h3 { font-family: 'Corben', Georgia, serif; font-size: 16px; color: var(--oro); margin: 0; text-align: center; }
+    .guida ol { margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.7; color: var(--testo); }
+    .guida .nota { font-size: 12px; color: var(--tenue); line-height: 1.5; }
+    .condividi { display: inline-flex; vertical-align: -5px; }
+    .apri-telegram {
+      display: block; text-align: center; text-decoration: none; min-height: 52px; line-height: 52px;
+      background: var(--oro); color: var(--su-oro); font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 17px; border-radius: 14px;
+    }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Servizio ai tavoli</h1>
-  <div class="sub">San Grato · Rivara 2026</div>
+<div class="schermo">
 
-  <!-- 1. CODICE -->
-  <div class="card" id="passo-codice" hidden>
-    <h2>Codice staff</h2>
-    <input type="password" id="codice-input" placeholder="SG-..." autocomplete="off">
-    <button id="btn-codice">Entra</button>
-    <div class="msg" id="msg-codice"></div>
+  <!-- ---------- 1. CODICE ---------- -->
+  <div class="centro" id="passo-codice" hidden>
+    <div class="marchio">
+      <div class="nome">Servizio ai tavoli</div>
+      <div class="luogo">San Grato · Rivara 2026</div>
+    </div>
+    <input type="password" id="codice-input" placeholder="Codice staff" autocomplete="off">
+    <button class="primario" id="btn-codice">Entra</button>
+    <div class="errore" id="msg-codice"></div>
   </div>
 
-  <!-- 2. SCELTA FILA -->
-  <div class="card" id="passo-fila" hidden>
-    <h2>Qual è la tua fila?</h2>
-    <div class="file" id="griglia-file"></div>
-    <div class="hint">Riceverai le chiamate solo dei tavoli della fila che scegli.</div>
+  <!-- ---------- 2. INGRESSO: fila + avvisi ---------- -->
+  <div class="centro" id="passo-ingresso" hidden>
+    <div class="marchio">
+      <div class="nome">Servizio ai tavoli</div>
+      <div class="luogo">San Grato · Rivara 2026</div>
+    </div>
+
+    <div class="sezione">
+      <div class="passo">1 · LA TUA FILA</div>
+      <div class="file" id="griglia-file"></div>
+      <div class="spiega">Ricevi solo le chiamate dei tavoli di questa fila. Puoi cambiarla quando vuoi.</div>
+    </div>
+
+    <div class="sezione">
+      <div class="passo">2 · COME TI AVVISO</div>
+
+      <button class="avviso-riga" id="riga-push">
+        <span class="icona" style="background: var(--oro);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="var(--su-oro)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 0 1-3.4 0" stroke="var(--su-oro)" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        <span class="testi">
+          <span class="titolo">Notifica sul telefono</span>
+          <span class="sotto" id="sotto-push">Arriva anche a schermo spento</span>
+        </span>
+        <span class="azione" id="azione-push">Attiva</span>
+        <span class="spunta" id="spunta-push" hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="var(--su-oro)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </button>
+
+      <button class="avviso-riga" id="riga-telegram" hidden>
+        <span class="icona" style="background: #2AA3E0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M21 4 3 11l5 2 2 6 3-4 5 4 3-15Z" stroke="#0E2C3A" stroke-width="2" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="testi">
+          <span class="titolo">Telegram</span>
+          <span class="sotto">Uguale su iPhone e Android</span>
+        </span>
+        <span class="azione">Attiva</span>
+      </button>
+
+      <div class="guida" id="guida-iphone" hidden>
+        <h3>Per le notifiche su iPhone</h3>
+        <ol>
+          <li>Tocca <span class="condividi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 15V3m0 0L8 7m4-4 4 4" stroke="var(--oro)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" stroke="var(--oro)" stroke-width="2" stroke-linecap="round"/></svg></span> <b>Condividi</b>, in basso</li>
+          <li>Scegli <b>«Aggiungi a Home»</b></li>
+          <li>Apri <b>San Grato</b> dalla schermata Home</li>
+          <li>Lì attiva le notifiche</li>
+        </ol>
+        <div class="nota">Si fa una volta sola. Se preferisci evitarlo, usa Telegram: funziona subito.</div>
+      </div>
+
+      <div class="guida" id="guida-telegram" hidden>
+        <h3>Notifiche su Telegram</h3>
+        <div class="nota" id="testo-telegram"></div>
+        <a class="apri-telegram" id="link-telegram" href="#" target="_blank" rel="noopener">Apri Telegram</a>
+        <div class="nota">Nella chat premi <b>Avvia</b>. Il link vale 15 minuti. Per smettere scrivi <b>/stop</b> al bot.</div>
+      </div>
+    </div>
+
+    <button class="primario" id="btn-inizia" disabled>Inizia il servizio</button>
+    <div class="spiega" style="text-align:center">Lo schermo resta acceso mentre sei in servizio.</div>
   </div>
 
-  <!-- 3. SERVIZIO -->
-  <div id="passo-servizio" hidden>
-    <div class="barra">
-      <span class="mia-fila" id="etichetta-fila">–</span>
-      <button class="ghost" id="btn-notifiche">Attiva notifiche</button>
+  <!-- ---------- 3. SERVIZIO ---------- -->
+  <div id="passo-servizio" hidden style="flex:1; display:flex; flex-direction:column; min-height:0;">
+    <div class="testa">
+      <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+        <div class="mia-fila" id="etichetta-fila">–</div>
+        <div style="min-width:0;">
+          <div class="quanti" id="quanti">Nessuna chiamata</div>
+          <div class="stato">
+            <span class="pallino" id="pallino"></span>
+            <span id="testo-stato">in ascolto</span>
+          </div>
+        </div>
+      </div>
+      <button class="tasto-tema" id="btn-tema" aria-label="Cambia tema">
+        <svg id="icona-luna" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke="var(--oro)" stroke-width="2" stroke-linejoin="round"/></svg>
+        <svg id="icona-sole" width="20" height="20" viewBox="0 0 24 24" fill="none" hidden><circle cx="12" cy="12" r="4.2" stroke="var(--oro)" stroke-width="2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6" stroke="var(--oro)" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
     </div>
-    <button class="ghost" id="btn-telegram" hidden style="width:100%">Ricevi le chiamate su Telegram</button>
-    <div class="guida" id="guida-telegram" hidden>
-      <h3>Notifiche su Telegram</h3>
-      <div class="nota" id="testo-telegram"></div>
-      <a id="link-telegram" href="#" target="_blank" rel="noopener"
-         style="display:block; text-align:center; text-decoration:none; min-height:50px; line-height:50px; background:#E9A722; color:#FBF3DA; font-family:'Corben',Georgia,serif; font-weight:700; font-size:17px; border-radius:14px;">Apri Telegram</a>
-      <div class="nota">Il link vale 15 minuti. Nella chat premi <b>Avvia</b>: da lì riceverai le chiamate della tua fila, anche a telefono bloccato. Per smettere scrivi <b>/stop</b> al bot.</div>
-    </div>
-    <div class="stato-notifiche" id="stato-notifiche" hidden>
-      <span class="pallino" id="pallino"></span><span id="testo-notifiche"></span>
-    </div>
-    <div class="guida" id="guida-iphone" hidden>
-      <h3>Per ricevere le notifiche su iPhone</h3>
-      <ol>
-        <li>Tocca <span class="condividi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 15V3m0 0L8 7m4-4 4 4" stroke="#C65B2E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" stroke="#C65B2E" stroke-width="2" stroke-linecap="round"/></svg></span> <b>Condividi</b>, in basso nel browser</li>
-        <li>Scorri e scegli <b>«Aggiungi a Home»</b></li>
-        <li>Chiudi il browser e apri <b>San Grato</b> dalla schermata Home</li>
-        <li>Lì premi <b>Attiva notifiche</b></li>
-      </ol>
-      <div class="nota">Si fa una volta sola. Dall'app dovrai reinserire il codice e la fila: iPhone tiene i due spazi separati.</div>
-    </div>
-    <div id="elenco"></div>
-    <div class="aggiornamento" id="aggiornamento"></div>
-    <div style="display:flex; gap:10px; margin-top:6px;">
-      <button class="ghost" id="btn-cambia" style="flex:1">Cambia fila</button>
-      <button class="ghost" id="btn-esci" style="flex:1">Esci</button>
+
+    <div class="elenco" id="elenco"></div>
+    <div class="aggiornato" id="aggiornato"></div>
+
+    <div class="fondo-barra">
+      <button class="fantasma" id="btn-cambia">Cambia fila</button>
+      <button class="fantasma" id="btn-esci">Esci</button>
     </div>
   </div>
+
 </div>
 
 <script>
 (function () {
   var K_CODICE = 'sg_staff_code';
   var K_FILA = 'sg_fila';
+  var K_TEMA = 'sg_tema';
   var FILE = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  var TENUTA = 750; // millisecondi di pressione per confermare
 
   var backendUrl = '';
   var chiaveVapid = '';
+  var botTelegram = '';
   var idVisti = {};
   var primoGiro = true;
   var timer = null;
   var audio = null;
   var blocco = null;
+  var filaScelta = '';
 
   var passoCodice = document.getElementById('passo-codice');
-  var passoFila = document.getElementById('passo-fila');
+  var passoIngresso = document.getElementById('passo-ingresso');
   var passoServizio = document.getElementById('passo-servizio');
   var elenco = document.getElementById('elenco');
-  var aggiornamento = document.getElementById('aggiornamento');
+  var aggiornato = document.getElementById('aggiornato');
   var msgCodice = document.getElementById('msg-codice');
-  var btnNotifiche = document.getElementById('btn-notifiche');
-  var statoNotifiche = document.getElementById('stato-notifiche');
+  var quanti = document.getElementById('quanti');
   var pallino = document.getElementById('pallino');
-  var testoNotifiche = document.getElementById('testo-notifiche');
+  var testoStato = document.getElementById('testo-stato');
+  var btnInizia = document.getElementById('btn-inizia');
 
-  function leggi(chiave) { try { return localStorage.getItem(chiave) || ''; } catch (e) { return ''; } }
-  function scrivi(chiave, valore) { try { localStorage.setItem(chiave, valore); } catch (e) {} }
-  function cancella(chiave) { try { localStorage.removeItem(chiave); } catch (e) {} }
+  function leggi(c) { try { return localStorage.getItem(c) || ''; } catch (e) { return ''; } }
+  function scrivi(c, v) { try { localStorage.setItem(c, v); } catch (e) {} }
+  function cancella(c) { try { localStorage.removeItem(c); } catch (e) {} }
 
-  // ---------- suono e vibrazione ----------
+  // ---------- tema sera / giorno ----------
+  function applicaTema(tema) {
+    document.documentElement.setAttribute('data-tema', tema);
+    document.getElementById('icona-luna').hidden = tema === 'giorno';
+    document.getElementById('icona-sole').hidden = tema !== 'giorno';
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', tema === 'giorno' ? '#FBF3DA' : '#14100A');
+  }
+  applicaTema(leggi(K_TEMA) === 'giorno' ? 'giorno' : 'sera');
+
+  document.getElementById('btn-tema').addEventListener('click', function () {
+    var nuovo = document.documentElement.getAttribute('data-tema') === 'giorno' ? 'sera' : 'giorno';
+    scrivi(K_TEMA, nuovo);
+    applicaTema(nuovo);
+  });
+
+  // ---------- suono, vibrazione, schermo acceso ----------
   function preparaAudio() {
     try {
       var Ctx = window.AudioContext || window.webkitAudioContext;
@@ -161,7 +324,8 @@
     } catch (e) {}
   }
 
-  // Tiene acceso lo schermo mentre la pagina e' in primo piano.
+  function vibra(schema) { try { if (navigator.vibrate) navigator.vibrate(schema); } catch (e) {} }
+
   function tieniAcceso() {
     try {
       if ('wakeLock' in navigator && !blocco) {
@@ -170,10 +334,19 @@
     } catch (e) {}
   }
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') { blocco = null; tieniAcceso(); }
+    if (document.visibilityState === 'visible' && !passoServizio.hidden) { blocco = null; tieniAcceso(); }
   });
 
   // ---------- notifiche push ----------
+  function suApple() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  function comeApp() {
+    return window.navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  }
+
   function daBase64(base64) {
     var pieno = (base64 + '='.repeat((4 - base64.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
     var grezzo = atob(pieno);
@@ -186,37 +359,37 @@
     if (!('caches' in window)) return Promise.resolve();
     return caches.open('sg-cameriere').then(function (deposito) {
       return deposito.put('config', new Response(JSON.stringify({
-        backendUrl: backendUrl, codice: leggi(K_CODICE), fila: leggi(K_FILA)
+        backendUrl: backendUrl, codice: leggi(K_CODICE), fila: filaScelta || leggi(K_FILA)
       })));
     }).catch(function () {});
   }
 
-  function mostraStatoNotifiche(attive, messaggio) {
-    statoNotifiche.hidden = false;
-    pallino.className = 'pallino' + (attive ? ' ok' : '');
-    testoNotifiche.textContent = messaggio;
-    btnNotifiche.hidden = attive;
+  function segnaPushAttiva(attiva, messaggio) {
+    document.getElementById('spunta-push').hidden = !attiva;
+    document.getElementById('azione-push').hidden = attiva;
+    document.getElementById('riga-push').classList.toggle('acceso', attiva);
+    if (messaggio) document.getElementById('sotto-push').textContent = messaggio;
   }
 
-  function attivaNotifiche() {
+  function attivaPush() {
     preparaAudio();
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      mostraStatoNotifiche(false, 'Notifiche non supportate: tieni la pagina aperta');
+    if (suApple() && !comeApp()) {
+      document.getElementById('guida-iphone').hidden = false;
+      document.getElementById('sotto-push').textContent = 'Su iPhone serve un passaggio in più';
+      return;
+    }
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !window.Notification) {
+      segnaPushAttiva(false, 'Non disponibili qui: tieni la pagina aperta');
       return;
     }
     Notification.requestPermission().then(function (permesso) {
-      if (permesso !== 'granted') {
-        mostraStatoNotifiche(false, 'Permesso negato: tieni la pagina aperta');
-        return;
-      }
+      if (permesso !== 'granted') { segnaPushAttiva(false, 'Permesso negato: tieni la pagina aperta'); return; }
       navigator.serviceWorker.register('sw.js')
         .then(function (reg) { return navigator.serviceWorker.ready.then(function () { return reg; }); })
         .then(function (reg) {
           return reg.pushManager.getSubscription().then(function (esistente) {
-            if (esistente) return esistente;
-            return reg.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: daBase64(chiaveVapid)
+            return esistente || reg.pushManager.subscribe({
+              userVisibleOnly: true, applicationServerKey: daBase64(chiaveVapid)
             });
           });
         })
@@ -225,108 +398,66 @@
             return fetch(backendUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + leggi(K_CODICE) },
-              body: JSON.stringify({ azione: 'iscrizione', endpoint: iscrizione.endpoint, fila: leggi(K_FILA) })
+              body: JSON.stringify({ azione: 'iscrizione', endpoint: iscrizione.endpoint, fila: filaScelta || leggi(K_FILA) })
             });
           });
         })
         .then(function (r) {
-          if (r && r.ok) mostraStatoNotifiche(true, 'Notifiche attive per la fila ' + leggi(K_FILA));
-          else mostraStatoNotifiche(false, 'Attivazione non riuscita, riprova');
+          if (r && r.ok) segnaPushAttiva(true, 'Attive per la fila ' + (filaScelta || leggi(K_FILA)));
+          else segnaPushAttiva(false, 'Attivazione non riuscita, riprova');
         })
-        .catch(function () {
-          mostraStatoNotifiche(false, 'Notifiche non attivabili: tieni la pagina aperta');
-        });
+        .catch(function () { segnaPushAttiva(false, 'Non attivabili: tieni la pagina aperta'); });
     });
   }
 
-  // ---------- Telegram ----------
-  var botTelegram = '';
+  document.getElementById('riga-push').addEventListener('click', attivaPush);
 
-  function preparaTelegram() {
-    if (!botTelegram) return;
-    document.getElementById('btn-telegram').hidden = false;
-  }
-
-  document.getElementById('btn-telegram').addEventListener('click', function () {
-    var bottone = this;
-    bottone.disabled = true;
-    bottone.textContent = 'Preparo il link...';
-    fetch(backendUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + leggi(K_CODICE) },
-      body: JSON.stringify({ azione: 'codiceTelegram', fila: leggi(K_FILA) })
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (j) {
-        bottone.disabled = false;
-        bottone.textContent = 'Ricevi le chiamate su Telegram';
-        if (!j.ok) { alert('Non riesco a preparare il link, riprova.'); return; }
-        document.getElementById('testo-telegram').textContent =
-          'Ti registro per la fila ' + leggi(K_FILA) + '. Tocca il pulsante: si apre Telegram sul bot giusto.';
-        document.getElementById('link-telegram').href =
-          'https://t.me/' + botTelegram + '?start=' + j.codice;
-        document.getElementById('guida-telegram').hidden = false;
-      })
-      .catch(function () {
-        bottone.disabled = false;
-        bottone.textContent = 'Ricevi le chiamate su Telegram';
-      });
-  });
-
-  // iPhone e iPad: Apple permette le notifiche web solo alle pagine aggiunte
-  // alla schermata Home. Non e' aggirabile via codice: si guida il cameriere.
-  function suApple() {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  }
-  function comeApp() {
-    return window.navigator.standalone === true ||
-      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-  }
-
-  btnNotifiche.addEventListener('click', function () {
-    if (suApple() && !comeApp()) {
-      preparaAudio();
-      document.getElementById('guida-iphone').hidden = false;
-      mostraStatoNotifiche(false, 'Su iPhone serve un passaggio in piu\u0300');
-      btnNotifiche.hidden = true;
-      return;
-    }
-    attivaNotifiche();
-  });
-
-  function controllaNotifiche() {
-    if (suApple() && !comeApp()) {
-      mostraStatoNotifiche(false, 'Su iPhone serve un passaggio in piu\u0300');
-      btnNotifiche.hidden = false;
-      btnNotifiche.textContent = 'Come attivarle';
-      return;
-    }
+  function controllaPush() {
+    if (suApple() && !comeApp()) { segnaPushAttiva(false, 'Su iPhone serve un passaggio in più'); return; }
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !window.Notification) {
-      mostraStatoNotifiche(false, 'Notifiche non supportate: tieni la pagina aperta');
-      return;
+      segnaPushAttiva(false, 'Non disponibili qui: tieni la pagina aperta'); return;
     }
-    if (Notification.permission !== 'granted') { btnNotifiche.hidden = false; statoNotifiche.hidden = true; return; }
+    if (Notification.permission !== 'granted') return;
     navigator.serviceWorker.getRegistration().then(function (reg) {
-      if (!reg) { btnNotifiche.hidden = false; return; }
-      reg.pushManager.getSubscription().then(function (iscrizione) {
-        if (iscrizione) { mostraStatoNotifiche(true, 'Notifiche attive per la fila ' + leggi(K_FILA)); salvaPerServiceWorker(); }
-        else btnNotifiche.hidden = false;
+      if (!reg) return;
+      reg.pushManager.getSubscription().then(function (isc) {
+        if (isc) { segnaPushAttiva(true, 'Attive per la fila ' + (filaScelta || leggi(K_FILA))); salvaPerServiceWorker(); }
       });
     }).catch(function () {});
   }
 
-  // ---------- elenco chiamate della mia fila ----------
-  function minutiFa(iso) {
+  // ---------- Telegram ----------
+  document.getElementById('riga-telegram').addEventListener('click', function () {
+    var riga = this;
+    if (!filaScelta) return;
+    riga.querySelector('.azione').textContent = '...';
+    fetch(backendUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + leggi(K_CODICE) },
+      body: JSON.stringify({ azione: 'codiceTelegram', fila: filaScelta })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        riga.querySelector('.azione').textContent = 'Attiva';
+        if (!j.ok) return;
+        document.getElementById('testo-telegram').textContent =
+          'Ti registro per la fila ' + filaScelta + ': tocca il pulsante, si apre il bot giusto.';
+        document.getElementById('link-telegram').href = 'https://t.me/' + botTelegram + '?start=' + j.codice;
+        document.getElementById('guida-telegram').hidden = false;
+        riga.classList.add('acceso');
+      })
+      .catch(function () { riga.querySelector('.azione').textContent = 'Attiva'; });
+  });
+
+  // ---------- elenco chiamate ----------
+  function minutiDa(iso) {
     var d = new Date(iso);
-    if (isNaN(d)) return '';
-    var m = Math.max(0, Math.round((Date.now() - d.getTime()) / 60000));
-    return m === 0 ? 'adesso' : m + " min fa";
+    if (isNaN(d)) return 0;
+    return Math.max(0, Math.round((Date.now() - d.getTime()) / 60000));
   }
 
-  function segnaFatto(id, bottone) {
-    bottone.disabled = true;
-    bottone.textContent = '...';
+  function segnaFatto(id, riquadro) {
+    riquadro.style.opacity = '.4';
     fetch(backendUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + leggi(K_CODICE) },
@@ -334,63 +465,129 @@
     }).then(function (r) {
       if (r.status === 401) { chiediCodice('Codice non valido.'); return; }
       carica();
-    }).catch(function () { bottone.disabled = false; bottone.textContent = 'Fatto'; });
+    }).catch(function () { riquadro.style.opacity = '1'; });
+  }
+
+  // Tieni premuto: evita di cancellare una chiamata con un tocco per sbaglio.
+  function collegaTenuta(tasto, riempi, parola, id, riquadro) {
+    var attesa = null;
+    var testoIniziale = parola.textContent;
+
+    function avvia(evento) {
+      if (evento.button && evento.button !== 0) return;
+      preparaAudio();
+      riempi.style.transition = 'width ' + TENUTA + 'ms linear';
+      riempi.style.width = '100%';
+      parola.textContent = 'Tieni premuto…';
+      vibra(20);
+      attesa = setTimeout(function () {
+        attesa = null;
+        vibra([40, 60, 40]);
+        segnaFatto(id, riquadro);
+      }, TENUTA);
+    }
+
+    function annulla() {
+      if (attesa) { clearTimeout(attesa); attesa = null; }
+      riempi.style.transition = 'width 150ms linear';
+      riempi.style.width = '0';
+      parola.textContent = testoIniziale;
+    }
+
+    tasto.addEventListener('pointerdown', avvia);
+    tasto.addEventListener('pointerup', annulla);
+    tasto.addEventListener('pointerleave', annulla);
+    tasto.addEventListener('pointercancel', annulla);
   }
 
   function mostra(chiamate) {
-    var fila = leggi(K_FILA);
+    var fila = filaScelta || leggi(K_FILA);
     var inizio = 'Fila ' + fila + ' · tavolo ';
     var mie = chiamate
       .filter(function (c) { return c.stato !== 'FATTO' && String(c.tavolo).indexOf(inizio) === 0; })
       .sort(function (a, b) { return a.id - b.id; });
 
     elenco.innerHTML = '';
-    if (mie.length === 0) {
-      var v = document.createElement('div');
-      v.className = 'vuoto';
-      v.textContent = 'Nessuna chiamata ✓';
-      elenco.appendChild(v);
-    }
-
     var nuove = 0;
+
     mie.forEach(function (c) {
+      var minuti = minutiDa(c.ora);
       var nuova = !primoGiro && !idVisti[c.id];
       if (nuova) nuove++;
+
+      var riquadro = document.createElement('div');
+      riquadro.className = 'chiamata' + (minuti >= 5 ? ' urgente' : (minuti >= 2 ? ' media' : '')) + (nuova ? ' nuova' : '');
+
       var riga = document.createElement('div');
-      riga.className = 'chiamata' + (nuova ? ' nuova' : '');
-      riga.style.marginBottom = '10px';
-      var info = document.createElement('div');
-      info.style.flex = '1';
-      var n = document.createElement('div');
-      n.className = 'numero';
-      n.textContent = String(c.tavolo).slice(inizio.length);
-      var t = document.createElement('div');
-      t.className = 'attesa';
-      t.textContent = minutiFa(c.ora);
-      info.appendChild(n); info.appendChild(t);
-      var b = document.createElement('button');
-      b.className = 'fatto';
-      b.textContent = 'Fatto';
-      b.addEventListener('click', function () { segnaFatto(c.id, b); });
-      riga.appendChild(info); riga.appendChild(b);
-      elenco.appendChild(riga);
+      riga.className = 'riga-tavolo';
+
+      var sinistra = document.createElement('div');
+      sinistra.style.cssText = 'flex:1; display:flex; align-items:baseline; gap:10px; min-width:0;';
+      var et = document.createElement('span');
+      et.className = 'etichetta'; et.textContent = 'TAVOLO';
+      var num = document.createElement('span');
+      num.className = 'numero'; num.textContent = String(c.tavolo).slice(inizio.length);
+      sinistra.appendChild(et); sinistra.appendChild(num);
+
+      var destra = document.createElement('div');
+      destra.style.cssText = 'text-align:right; display:flex; flex-direction:column; gap:2px; flex-shrink:0;';
+      var tempo = document.createElement('span');
+      tempo.className = 'tempo';
+      tempo.style.color = minuti >= 5 ? 'var(--rosso)' : (minuti >= 2 ? 'var(--oro)' : 'var(--verde)');
+      tempo.textContent = minuti === 0 ? 'ora' : minuti + ' min';
+      var nota = document.createElement('span');
+      nota.className = 'tempo-nota';
+      nota.textContent = minuti === 0 ? 'appena arrivata' : (minuti >= 5 ? 'aspetta da un po’' : 'in attesa');
+      destra.appendChild(tempo); destra.appendChild(nota);
+
+      riga.appendChild(sinistra); riga.appendChild(destra);
+
+      var tasto = document.createElement('div');
+      tasto.className = 'conferma';
+      var riempi = document.createElement('div');
+      riempi.className = 'riempi';
+      var dentro = document.createElement('div');
+      dentro.className = 'dentro';
+      dentro.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="var(--su-verde)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      var parola = document.createElement('span');
+      parola.className = 'parola';
+      parola.textContent = 'Tieni premuto: servito';
+      dentro.appendChild(parola);
+      tasto.appendChild(riempi); tasto.appendChild(dentro);
+      collegaTenuta(tasto, riempi, parola, c.id, riquadro);
+
+      riquadro.appendChild(riga); riquadro.appendChild(tasto);
+      elenco.appendChild(riquadro);
+
       if (document.visibilityState === 'visible') idVisti[c.id] = true;
     });
 
-    if (nuove > 0) {
-      campanello();
-      if (navigator.vibrate) navigator.vibrate([300, 120, 300]);
+    if (mie.length === 0) {
+      var riposo = document.createElement('div');
+      riposo.className = 'riposo';
+      riposo.innerHTML =
+        '<svg width="54" height="54" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="var(--bordo)" stroke-width="2"/><path d="M8 12.5 11 15.5 16.5 9" stroke="var(--verde)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '<div class="frase">Tutto servito</div>' +
+        '<div class="sotto">Ti avviso appena qualcuno<br>della fila ' + fila + ' ha bisogno.</div>';
+      elenco.appendChild(riposo);
     }
 
+    if (nuove > 0) { campanello(); vibra([300, 120, 300]); }
+
+    quanti.textContent = mie.length === 0 ? 'Nessuna chiamata'
+      : (mie.length === 1 ? '1 tavolo ti chiama' : mie.length + ' tavoli ti chiamano');
     document.title = (mie.length > 0 ? '(' + mie.length + ') ' : '') + 'Cameriere · San Grato';
+
     var ora = new Date();
-    aggiornamento.textContent = 'Aggiornato alle ' +
+    aggiornato.textContent = 'aggiornato alle ' +
       ('0' + ora.getHours()).slice(-2) + ':' + ('0' + ora.getMinutes()).slice(-2);
+    pallino.className = 'pallino';
+    testoStato.textContent = 'in ascolto';
     primoGiro = false;
   }
 
   function carica() {
-    if (!backendUrl || !leggi(K_CODICE) || !leggi(K_FILA)) return;
+    if (!backendUrl || !leggi(K_CODICE) || !(filaScelta || leggi(K_FILA))) return;
     fetch(backendUrl + '?azione=lista&v=' + Date.now(), {
       headers: { 'Authorization': 'Bearer ' + leggi(K_CODICE) }
     })
@@ -399,7 +596,10 @@
         return r.json();
       })
       .then(function (j) { if (j && j.ok) mostra(j.chiamate || []); })
-      .catch(function () { aggiornamento.textContent = 'Connessione assente, riprovo...'; });
+      .catch(function () {
+        pallino.className = 'pallino spento';
+        testoStato.textContent = 'connessione assente, riprovo';
+      });
   }
 
   // ---------- passaggi ----------
@@ -409,43 +609,56 @@
     fermaTimer();
     cancella(K_CODICE);
     passoCodice.hidden = false;
-    passoFila.hidden = true;
+    passoIngresso.hidden = true;
     passoServizio.hidden = true;
     msgCodice.textContent = messaggio || '';
   }
 
-  function chiediFila() {
+  function mostraIngresso() {
     fermaTimer();
     passoCodice.hidden = true;
-    passoFila.hidden = false;
+    passoIngresso.hidden = false;
     passoServizio.hidden = true;
+    filaScelta = leggi(K_FILA);
+    disegnaFile();
+    btnInizia.disabled = !filaScelta;
+    if (botTelegram) document.getElementById('riga-telegram').hidden = false;
+    controllaPush();
   }
 
   function avviaServizio() {
     passoCodice.hidden = true;
-    passoFila.hidden = true;
+    passoIngresso.hidden = true;
     passoServizio.hidden = false;
-    document.getElementById('etichetta-fila').textContent = leggi(K_FILA);
+    document.getElementById('etichetta-fila').textContent = filaScelta || leggi(K_FILA);
     primoGiro = true;
     idVisti = {};
     carica();
     if (!timer) timer = setInterval(carica, 8000);
-    controllaNotifiche();
-    preparaTelegram();
     salvaPerServiceWorker();
     tieniAcceso();
   }
 
-  FILE.forEach(function (f) {
-    var b = document.createElement('button');
-    b.textContent = f;
-    b.addEventListener('click', function () {
-      preparaAudio();
-      scrivi(K_FILA, f);
-      avviaServizio();
+  function disegnaFile() {
+    var griglia = document.getElementById('griglia-file');
+    griglia.innerHTML = '';
+    FILE.forEach(function (f) {
+      var b = document.createElement('button');
+      b.textContent = f;
+      if (f === filaScelta) b.className = 'scelta';
+      b.addEventListener('click', function () {
+        preparaAudio();
+        filaScelta = f;
+        scrivi(K_FILA, f);
+        disegnaFile();
+        btnInizia.disabled = false;
+        document.getElementById('guida-telegram').hidden = true;
+      });
+      griglia.appendChild(b);
     });
-    document.getElementById('griglia-file').appendChild(b);
-  });
+  }
+
+  btnInizia.addEventListener('click', function () { if (filaScelta) avviaServizio(); });
 
   document.getElementById('btn-codice').addEventListener('click', function () {
     var c = document.getElementById('codice-input').value.trim();
@@ -458,14 +671,19 @@
         scrivi(K_CODICE, c);
         document.getElementById('codice-input').value = '';
         msgCodice.textContent = '';
-        if (leggi(K_FILA)) avviaServizio(); else chiediFila();
+        mostraIngresso();
       })
       .catch(function () { msgCodice.textContent = 'Connessione assente.'; });
   });
 
-  document.getElementById('btn-cambia').addEventListener('click', chiediFila);
+  document.getElementById('codice-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') document.getElementById('btn-codice').click();
+  });
+
+  document.getElementById('btn-cambia').addEventListener('click', mostraIngresso);
   document.getElementById('btn-esci').addEventListener('click', function () {
     cancella(K_FILA);
+    filaScelta = '';
     chiediCodice('');
   });
 
@@ -474,19 +692,17 @@
     .then(function (r) { return r.json(); })
     .then(function (cfg) {
       backendUrl = (cfg.backendUrl || '').trim();
-      return fetch(backendUrl + '?azione=vapid').then(function (r) { return r.json(); });
+      return fetch(backendUrl + '?azione=vapid').then(function (r) { return r.json(); }).catch(function () { return null; });
     })
     .then(function (v) {
       chiaveVapid = (v && v.chiave) || '';
-      return fetch(backendUrl + '?azione=telegram')
-        .then(function (r) { return r.json(); })
-        .catch(function () { return null; });
+      return fetch(backendUrl + '?azione=telegram').then(function (r) { return r.json(); }).catch(function () { return null; });
     })
     .then(function (t) {
       botTelegram = (t && t.attivo && t.bot) ? t.bot : '';
       if (!leggi(K_CODICE)) chiediCodice('');
-      else if (!leggi(K_FILA)) chiediFila();
-      else avviaServizio();
+      else if (!leggi(K_FILA)) mostraIngresso();
+      else { filaScelta = leggi(K_FILA); avviaServizio(); }
     })
     .catch(function () { chiediCodice('Server non raggiungibile.'); });
 })();

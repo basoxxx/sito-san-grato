@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corben:wght@400;700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap">
+  <style>
+    body { margin: 0; background: #14100A; font-family: 'Nunito Sans', system-ui, sans-serif; }
+    a { color: #E9A722; } a:hover { color: #F5BC4A; }
+    @keyframes respiro { 0%, 100% { box-shadow: 0 0 0 0 rgba(214,74,45,0); } 50% { box-shadow: 0 0 0 6px rgba(214,74,45,0.18); } }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #14100A; color: #F6E7C4; display: flex; flex-direction: column; overflow: hidden;">
+
+  <!-- intestazione -->
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 12px 18px; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 34px; line-height: 1; color: #14100A; background: #E9A722; border-radius: 16px; padding: 10px 20px 6px 20px;">C</div>
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+        <div style="font-size: 15px; font-weight: 800; color: #F6E7C4;">{{titolo}}</div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #4FA463;"></span>
+          <span style="font-size: 11.5px; font-weight: 700; color: #9C8A65;">in ascolto · notifiche attive</span>
+        </div>
+      </div>
+    </div>
+    <div style="width: 44px; height: 44px; border-radius: 14px; border: 2px solid #3A3020; display: flex; align-items: center; justify-content: center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke="#E9A722" stroke-width="2" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+
+  <!-- chiamate -->
+  <div style="flex: 1; overflow-y: auto; padding: 0 18px 8px 18px; display: flex; flex-direction: column; gap: 14px;">
+
+    <sc-for list="{{chiamate}}" as="c" hint-placeholder-count="3">
+      <div style="background: #241D12; border: 3px solid {{c.bordo}}; border-radius: 22px; padding: 16px 16px 14px 16px; display: flex; flex-direction: column; gap: 12px; animation: {{c.animazione}};">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="flex: 1; display: flex; align-items: baseline; gap: 10px;">
+            <span style="font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #9C8A65;">TAVOLO</span>
+            <span style="font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 58px; line-height: 0.9; color: #FFF6E0;">{{c.tavolo}}</span>
+          </div>
+          <div style="text-align: right; display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-family: 'Corben', Georgia, serif; font-size: 20px; font-weight: 700; color: {{c.bordo}};">{{c.attesa}}</span>
+            <span style="font-size: 11px; font-weight: 700; color: #9C8A65;">{{c.etichetta}}</span>
+          </div>
+        </div>
+
+        <!-- tieni premuto per confermare -->
+        <div onPointerDown="{{c.giu}}" onPointerUp="{{c.su}}" onPointerLeave="{{c.su}}"
+             style="position: relative; min-height: 56px; border-radius: 16px; background: #1B1710; border: 2px solid #3E7F4F; overflow: hidden; cursor: pointer; user-select: none;">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{c.riempimento}}; background: #3E7F4F; transition: width {{c.durata}} linear;"></div>
+          <div style="position: relative; height: 56px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="#EAF6EC" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span style="font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 16px; color: #EAF6EC;">{{c.testoTasto}}</span>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+
+    <sc-if value="{{vuoto}}" hint-placeholder-val="{{ false }}">
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 60px 20px; text-align: center;">
+        <svg width="54" height="54" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#3A3020" stroke-width="2"/><path d="M8 12.5 11 15.5 16.5 9" stroke="#4FA463" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-family: 'Corben', Georgia, serif; font-size: 20px; color: #6E5F42;">Tutto servito</div>
+        <div style="font-size: 13px; color: #6E5F42; line-height: 1.5;">Ti avviso appena qualcuno<br>della fila C ha bisogno.</div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <!-- barra in basso, a portata di pollice -->
+  <div style="display: flex; gap: 10px; padding: 12px 18px 22px 18px; border-top: 1px solid #2A2318; background: #14100A;">
+    <div style="flex: 1; min-height: 48px; border-radius: 14px; border: 2px dashed #3A3020; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #9C8A65;">Cambia fila</div>
+    <div style="flex: 1; min-height: 48px; border-radius: 14px; border: 2px dashed #3A3020; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #9C8A65;">Esci</div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { premendo: null, servite: {} };
+    this.attesa = null;
+  }
+
+  inizia(id) {
+    this.setState({ premendo: id });
+    clearTimeout(this.attesa);
+    var self = this;
+    this.attesa = setTimeout(function () {
+      var servite = Object.assign({}, self.state.servite);
+      servite[id] = true;
+      self.setState({ servite: servite, premendo: null });
+    }, 750);
+  }
+
+  ferma() {
+    clearTimeout(this.attesa);
+    if (this.state.premendo !== null) this.setState({ premendo: null });
+  }
+
+  componentWillUnmount() { clearTimeout(this.attesa); }
+
+  renderVals() {
+    var self = this;
+    var tutte = [
+      { id: 1, tavolo: '12', minuti: 7 },
+      { id: 2, tavolo: '4', minuti: 3 },
+      { id: 3, tavolo: '9', minuti: 0 }
+    ];
+
+    var chiamate = tutte
+      .filter(function (c) { return !self.state.servite[c.id]; })
+      .map(function (c) {
+        var urgente = c.minuti >= 5;
+        var bordo = urgente ? '#D64A2D' : (c.minuti >= 2 ? '#E9A722' : '#4FA463');
+        var premuto = self.state.premendo === c.id;
+        return {
+          id: c.id,
+          tavolo: c.tavolo,
+          bordo: bordo,
+          animazione: urgente ? 'respiro 1.8s ease-in-out infinite' : 'none',
+          attesa: c.minuti === 0 ? 'ora' : c.minuti + ' min',
+          etichetta: c.minuti === 0 ? 'appena arrivata' : (urgente ? 'aspetta da un po’' : 'in attesa'),
+          riempimento: premuto ? '100%' : '0%',
+          durata: premuto ? '750ms' : '150ms',
+          testoTasto: premuto ? 'Tieni premuto…' : 'Tieni premuto: servito',
+          giu: function () { self.inizia(c.id); },
+          su: function () { self.ferma(); }
+        };
+      });
+
+    return {
+      chiamate: chiamate,
+      vuoto: chiamate.length === 0,
+      titolo: chiamate.length === 0
+        ? 'Nessuna chiamata'
+        : (chiamate.length === 1 ? '1 tavolo ti chiama' : chiamate.length + ' tavoli ti chiamano')
+    };
+  }
+}
+</script>
+</body>
+</html>

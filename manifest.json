@@ -4,10 +4,20 @@
   "start_url": "cameriere.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#FBF3DA",
-  "theme_color": "#E9A722",
+  "background_color": "#14100A",
+  "theme_color": "#14100A",
   "icons": [
-    { "src": "icona.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icona512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    {
+      "src": "icona.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icona512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }
