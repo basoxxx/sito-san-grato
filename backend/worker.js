@@ -256,6 +256,17 @@ export default {
         return json({ ok: true, chiamate: results }, 200, richiesta);
       }
 
+      // Numeri delle serate: solo il gestore.
+      if (azioneGet === "statistiche") {
+        if (!autorizzato(richiesta, env.TOKEN_ADMIN)) {
+          return json({ ok: false, errore: "codice non valido" }, 401, richiesta);
+        }
+        const { results } = await env.DB.prepare(
+          "SELECT id, ora, tavolo, stato, servita FROM chiamate ORDER BY id DESC LIMIT 5000"
+        ).all();
+        return json({ ok: true, chiamate: results }, 200, richiesta);
+      }
+
       if (azioneGet === "telegram") {
         if (!telegramAttivo(env)) return json({ ok: true, attivo: false }, 200, richiesta);
         try {
@@ -379,7 +390,8 @@ export default {
         }
         const id = parseInt(dati.id, 10);
         if (!id) return json({ ok: false, errore: "id mancante" }, 400, richiesta);
-        await env.DB.prepare("UPDATE chiamate SET stato = 'FATTO' WHERE id = ?").bind(id).run();
+        await env.DB.prepare("UPDATE chiamate SET stato = 'FATTO', servita = ? WHERE id = ?")
+          .bind(new Date().toISOString(), id).run();
         return json({ ok: true }, 200, richiesta);
       }
 
