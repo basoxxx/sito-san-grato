@@ -14,6 +14,7 @@
     a:hover { color: #B87A08; }
   </style>
 
+  <script src="config.js"></script>
 </head>
 <body>
 <div style="background: #FBF3DA; min-height: 100%; display: flex; justify-content: center;">
@@ -174,6 +175,18 @@
     <div style="font-size: 13px; font-weight: 600; line-height: 1.5; color: #4A3B23;">No a conti separati o divisioni di gruppi in sottogruppi. Grazie!</div>
   </div>
 
+  <!-- CHIAMA IL CAMERIERE (attivabile da config.js) -->
+  <div id="chiama-cameriere" hidden style="background: #FDF8E8; border: 3px solid #E9A722; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center;">
+    <div style="font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 20px; color: #E9A722;">Serve qualcosa?</div>
+    <div id="cc-tavolo-label" style="font-size: 14px; font-weight: 600; color: #4A3B23;"></div>
+    <div id="cc-scelta-tavolo" hidden style="display: flex; align-items: center; gap: 10px;">
+      <label for="cc-numero" style="font-size: 14px; font-weight: 600; color: #4A3B23;">Numero tavolo:</label>
+      <input id="cc-numero" type="number" min="1" max="99" inputmode="numeric" style="width: 70px; min-height: 44px; font-size: 18px; font-weight: 700; text-align: center; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px;">
+    </div>
+    <button id="cc-bottone" style="min-height: 52px; padding: 0 32px; background: #E9A722; color: #FBF3DA; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; border: none; border-radius: 16px; cursor: pointer;">Chiama il cameriere</button>
+    <div id="cc-esito" style="font-size: 14px; font-weight: 600; color: #4A3B23;"></div>
+  </div>
+
   <!-- FOOTER -->
   <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 8px;">
     <div style="font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; color: #E9A722;">Per info e prenotazioni</div>
@@ -189,5 +202,45 @@
 </div>
 </div>
 
+<script>
+(function () {
+  var cfg = window.CONFIG || {};
+  if (!cfg.chiamaCameriere || !cfg.backendUrl) return;
+
+  var box = document.getElementById('chiama-cameriere');
+  box.hidden = false;
+
+  var params = new URLSearchParams(location.search);
+  var tavoloUrl = params.get('tavolo');
+  var label = document.getElementById('cc-tavolo-label');
+  var scelta = document.getElementById('cc-scelta-tavolo');
+  var input = document.getElementById('cc-numero');
+  var bottone = document.getElementById('cc-bottone');
+  var esito = document.getElementById('cc-esito');
+
+  if (tavoloUrl) {
+    label.textContent = 'Tavolo ' + tavoloUrl;
+  } else {
+    scelta.hidden = false;
+  }
+
+  bottone.addEventListener('click', function () {
+    var tavolo = tavoloUrl || input.value.trim();
+    if (!tavolo) { esito.textContent = 'Inserisci il numero del tavolo'; return; }
+    bottone.disabled = true;
+    esito.textContent = 'Invio in corso...';
+    fetch(cfg.backendUrl, {
+      method: 'POST',
+      body: JSON.stringify({ tavolo: tavolo })
+    }).then(function () {
+      esito.textContent = 'Chiamata inviata! Un cameriere arriva al tavolo ' + tavolo + '.';
+      setTimeout(function () { bottone.disabled = false; esito.textContent = ''; }, 60000);
+    }).catch(function () {
+      esito.textContent = 'Errore di invio, riprova o alza la mano!';
+      bottone.disabled = false;
+    });
+  });
+})();
+</script>
 </body>
 </html>
