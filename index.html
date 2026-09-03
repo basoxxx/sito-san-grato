@@ -190,6 +190,10 @@
         <button class="cc-fila" data-fila="G" style="min-height: 48px; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; cursor: pointer;">G</button>
         <button class="cc-fila" data-fila="H" style="min-height: 48px; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; cursor: pointer;">H</button>
       </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <label for="cc-numero" style="font-size: 14px; font-weight: 600; color: #4A3B23;">Numero tavolo:</label>
+        <input id="cc-numero" type="number" min="1" max="99" inputmode="numeric" style="width: 70px; min-height: 44px; font-size: 18px; font-weight: 700; text-align: center; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px;">
+      </div>
     </div>
     <button id="cc-bottone" style="min-height: 52px; padding: 0 32px; background: #E9A722; color: #FBF3DA; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; border: none; border-radius: 16px; cursor: pointer;">Chiama il cameriere</button>
     <button id="cc-annulla" hidden style="min-height: 44px; padding: 0 24px; background: transparent; color: #C65B2E; font-family: 'Nunito Sans', system-ui, sans-serif; font-weight: 700; font-size: 14px; border: 2px dashed #E9A722; border-radius: 12px; cursor: pointer;">Annulla</button>
@@ -225,7 +229,9 @@ fetch('config.json?v=' + Date.now())
   var esito = document.getElementById('cc-esito');
   var filaScelta = '';
   var inConferma = false;
+  var input = document.getElementById('cc-numero');
   scelta.hidden = false;
+  input.addEventListener('input', function () { if (inConferma) resetConferma(); });
 
   var bottoniFila = document.querySelectorAll('.cc-fila');
   bottoniFila.forEach(function (b) {
@@ -252,11 +258,13 @@ fetch('config.json?v=' + Date.now())
 
   bottone.addEventListener('click', function () {
     if (!filaScelta) { esito.textContent = 'Scegli prima la tua fila'; return; }
-    var fila = 'Fila ' + filaScelta;
+    var numero = input.value.trim();
+    if (!numero) { esito.textContent = 'Inserisci il numero del tavolo'; return; }
+    var fila = 'Fila ' + filaScelta + ' · tavolo ' + numero;
 
     if (!inConferma) {
       inConferma = true;
-      bottone.textContent = 'Conferma · fila ' + filaScelta;
+      bottone.textContent = 'Conferma · ' + filaScelta + numero;
       annulla.hidden = false;
       esito.textContent = 'Premi di nuovo per confermare la chiamata';
       return;
@@ -271,7 +279,7 @@ fetch('config.json?v=' + Date.now())
       body: JSON.stringify({ tavolo: fila })
     }).then(function () {
       bottone.textContent = 'Chiama il cameriere';
-      esito.textContent = 'Chiamata inviata! Un cameriere arriva alla fila ' + filaScelta + '.';
+      esito.textContent = 'Chiamata inviata! Un cameriere arriva alla fila ' + filaScelta + ', tavolo ' + numero + '.';
       setTimeout(function () { bottone.disabled = false; esito.textContent = ''; }, 60000);
     }).catch(function () {
       bottone.textContent = 'Chiama il cameriere';

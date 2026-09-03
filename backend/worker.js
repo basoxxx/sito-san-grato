@@ -54,7 +54,7 @@ export default {
       }
 
       // Nuova chiamata dal menu
-      const tavolo = String(dati.tavolo || "").trim().slice(0, 20);
+      const tavolo = String(dati.tavolo || "").trim().slice(0, 25);
       if (!tavolo) return json({ ok: false, errore: "tavolo mancante" }, 400);
 
       // Anti-doppione: ignora se lo stesso tavolo ha già una chiamata in attesa
