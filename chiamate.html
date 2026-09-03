@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Chiamate tavoli · San Grato</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔔</text></svg>">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Corben:wght@400;700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap">
+  <style>
+    body { margin: 0; background: #FBF3DA; font-family: 'Nunito Sans', system-ui, sans-serif; color: #4A3B23; }
+    .wrap { max-width: 500px; margin: 0 auto; padding: 24px 16px 40px; display: flex; flex-direction: column; gap: 16px; }
+    h1 { font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 30px; color: #E9A722; text-align: center; margin: 0; }
+    .sub { text-align: center; font-size: 13px; color: #8A6D3B; margin-top: -10px; }
+    h2 { font-family: 'Corben', Georgia, serif; font-size: 17px; color: #C65B2E; margin: 8px 0 0; }
+    .chiamata { background: #FDF8E8; border: 3px solid #E9A722; border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+    .chiamata.nuova { border-color: #C65B2E; animation: lampeggia 1s ease-in-out 3; }
+    @keyframes lampeggia { 50% { background: #F8E3C0; } }
+    .tavolo { font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 24px; color: #4A3B23; flex: 1; }
+    .ora { font-size: 14px; font-weight: 700; color: #8A6D3B; white-space: nowrap; }
+    .attesa { font-size: 13px; font-weight: 800; color: #C65B2E; }
+    .fatto-btn { min-height: 52px; min-width: 90px; background: #3E8E4F; color: #FBF3DA; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 16px; border: none; border-radius: 14px; cursor: pointer; }
+    .fatto-btn:disabled { opacity: .5; }
+    .servita { background: transparent; border: 2px dashed #E0C480; border-radius: 14px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; opacity: .65; }
+    .servita .tavolo { font-size: 16px; }
+    .vuoto { text-align: center; font-size: 15px; font-weight: 600; color: #8A6D3B; padding: 30px 10px; }
+    .errore { text-align: center; font-size: 14px; font-weight: 700; color: #C65B2E; padding: 20px 10px; line-height: 1.5; }
+    .aggiornamento { text-align: center; font-size: 12px; color: #A98F5C; }
+    a { color: #D9950F; font-weight: 700; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Chiamate tavoli</h1>
+  <div class="sub">San Grato · Rivara 2026 — si aggiorna da sola ogni 10 secondi</div>
+  <div id="contenuto"><div class="vuoto">Caricamento...</div></div>
+  <div class="aggiornamento" id="aggiornamento"></div>
+</div>
+
+<script>
+(function () {
+  var contenuto = document.getElementById('contenuto');
+  var aggiornamento = document.getElementById('aggiornamento');
+  var backendUrl = '';
+  var righeViste = {};
+  var primoGiro = true;
+
+  function oraBreve(iso) {
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+
+  function minutiFa(iso) {
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    var m = Math.max(0, Math.round((Date.now() - d.getTime()) / 60000));
+    if (m === 0) return 'adesso';
+    return m + ' min fa';
+  }
+
+  function segnaFatto(riga, bottone) {
+    bottone.disabled = true;
+    bottone.textContent = '...';
+    fetch(backendUrl, {
+      method: 'POST',
+      body: JSON.stringify({ azione: 'fatto', riga: riga })
+    }).then(function () { carica(); })
+      .catch(function () { bottone.disabled = false; bottone.textContent = 'Fatto'; });
+  }
+
+  function mostra(chiamate) {
+    contenuto.innerHTML = '';
+    var attive = chiamate.filter(function (c) { return c.stato !== 'FATTO'; }).reverse();
+    var servite = chiamate.filter(function (c) { return c.stato === 'FATTO'; }).reverse().slice(0, 15);
+
+    if (attive.length === 0) {
+      var v = document.createElement('div');
+      v.className = 'vuoto';
+      v.textContent = 'Nessuna chiamata in attesa ✓';
+      contenuto.appendChild(v);
+    }
+
+    attive.forEach(function (c) {
+      var div = document.createElement('div');
+      div.className = 'chiamata' + (!primoGiro && !righeViste[c.riga] ? ' nuova' : '');
+      var info = document.createElement('div');
+      info.style.flex = '1';
+      var t = document.createElement('div');
+      t.className = 'tavolo'; t.textContent = c.tavolo;
+      var a = document.createElement('div');
+      a.className = 'attesa'; a.textContent = oraBreve(c.ora) + ' · ' + minutiFa(c.ora);
+      info.appendChild(t); info.appendChild(a);
+      var b = document.createElement('button');
+      b.className = 'fatto-btn'; b.textContent = 'Fatto';
+      b.addEventListener('click', function () { segnaFatto(c.riga, b); });
+      div.appendChild(info); div.appendChild(b);
+      contenuto.appendChild(div);
+      if (!primoGiro && !righeViste[c.riga] && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      righeViste[c.riga] = true;
+    });
+
+    if (servite.length > 0) {
+      var h = document.createElement('h2');
+      h.textContent = 'Servite di recente';
+      contenuto.appendChild(h);
+      servite.forEach(function (c) {
+        var div = document.createElement('div');
+        div.className = 'servita';
+        var t = document.createElement('div');
+        t.className = 'tavolo'; t.style.flex = '1'; t.textContent = c.tavolo;
+        var o = document.createElement('div');
+        o.className = 'ora'; o.textContent = oraBreve(c.ora);
+        div.appendChild(t); div.appendChild(o);
+        contenuto.appendChild(div);
+      });
+    }
+
+    document.title = (attive.length > 0 ? '(' + attive.length + ') ' : '') + 'Chiamate tavoli · San Grato';
+    aggiornamento.textContent = 'Ultimo aggiornamento: ' + oraBreve(new Date().toISOString());
+    primoGiro = false;
+  }
+
+  function carica() {
+    if (!backendUrl) return;
+    fetch(backendUrl + '?azione=lista&v=' + Date.now())
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (j.ok) mostra(j.chiamate || []); })
+      .catch(function () {
+        aggiornamento.textContent = 'Connessione assente, riprovo...';
+      });
+  }
+
+  fetch('config.json?v=' + Date.now())
+    .then(function (r) { return r.json(); })
+    .then(function (cfg) {
+      backendUrl = (cfg.backendUrl || '').trim();
+      if (!backendUrl) {
+        contenuto.innerHTML = '<div class="errore">Il backend non è ancora attivo.<br>Configuralo dalla <a href="admin.html">dashboard</a> seguendo le istruzioni in backend/README.md.</div>';
+        return;
+      }
+      carica();
+      setInterval(carica, 10000);
+    });
+})();
+</script>
+</body>
+</html>

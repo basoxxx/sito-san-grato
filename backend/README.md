@@ -30,3 +30,15 @@ Costo: **zero**. Serve solo un account Google.
 
 Ogni tavolo ha il suo link:
 `https://basoxxx.github.io/sito-san-grato/?tavolo=1` (2, 3, ...)
+
+## Pagina chiamate per i camerieri
+
+I camerieri non devono usare il Foglio Google direttamente: c'è la pagina
+`https://basoxxx.github.io/sito-san-grato/chiamate.html`
+che mostra le chiamate in attesa (si aggiorna da sola ogni 10 secondi),
+con pulsante **Fatto** per segnarle come servite e vibrazione
+quando arriva una chiamata nuova.
+
+**Nota**: se avevi già distribuito una versione vecchia di `Code.gs`,
+incolla la versione aggiornata e ripubblica con
+**Distribuisci → Gestisci distribuzioni → Modifica → Nuova versione**.
