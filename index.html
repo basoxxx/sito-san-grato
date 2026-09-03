@@ -219,7 +219,15 @@
 fetch('config.json?v=' + Date.now())
   .then(function (r) { return r.json(); })
   .then(function (cfg) {
-  if (!cfg.chiamaCameriere || !cfg.backendUrl) return;
+    var indirizzo = (cfg.backendUrl || '').trim();
+    if (!indirizzo) return null;
+    // Se la sezione e' attiva lo decide il server, non un file pubblico.
+    return fetch(indirizzo + '?azione=stato&v=' + Date.now())
+      .then(function (r) { return r.json(); })
+      .then(function (s) { return s && s.chiamaCameriere ? indirizzo : null; });
+  })
+  .then(function (backendUrl) {
+  if (!backendUrl) return;
 
   var box = document.getElementById('chiama-cameriere');
   box.hidden = false;
@@ -274,10 +282,12 @@ fetch('config.json?v=' + Date.now())
     annulla.hidden = true;
     bottone.disabled = true;
     esito.textContent = 'Invio in corso...';
-    fetch(cfg.backendUrl, {
+    fetch(backendUrl, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tavolo: fila })
-    }).then(function () {
+    }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
       bottone.textContent = 'Chiama il cameriere';
       esito.textContent = 'Chiamata inviata! Un cameriere arriva alla fila ' + filaScelta + ', tavolo ' + numero + '.';
       setTimeout(function () { bottone.disabled = false; esito.textContent = ''; }, 60000);

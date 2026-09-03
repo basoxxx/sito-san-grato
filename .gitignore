@@ -1,3 +1,10 @@
 .DS_Store
 menu-san-grato.html
 locandina.jpg
+
+# File di lavoro locali: non devono finire nel repository pubblico
+.wrangler/
+backend/.wrangler/
+node_modules/
+*.xlsm
+PHOTO-*.jpg

@@ -32,14 +32,28 @@
     .errore { text-align: center; font-size: 14px; font-weight: 700; color: #C65B2E; padding: 20px 10px; line-height: 1.5; }
     .aggiornamento { text-align: center; font-size: 12px; color: #A98F5C; }
     a { color: #D9950F; font-weight: 700; }
+    .accesso { max-width: 340px; margin: 20px auto 0; background: #FDF8E8; border: 3px solid #E9A722; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .accesso h2 { margin: 0; text-align: center; color: #E9A722; }
+    .accesso input { min-height: 48px; font-size: 17px; font-weight: 700; text-align: center; padding: 0 12px; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; color: #4A3B23; }
+    .accesso button { min-height: 50px; background: #E9A722; color: #FBF3DA; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 17px; border: none; border-radius: 14px; cursor: pointer; }
+    .accesso .msg { text-align: center; font-size: 13px; font-weight: 700; color: #C65B2E; min-height: 18px; }
+    .esci { align-self: center; background: transparent; border: 2px dashed #E9A722; color: #C65B2E; font-weight: 700; font-size: 13px; min-height: 40px; padding: 0 18px; border-radius: 12px; cursor: pointer; }
+    [hidden] { display: none !important; }
   </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Chiamate tavoli</h1>
   <div class="sub">San Grato · Rivara 2026 — si aggiorna da sola ogni 10 secondi</div>
+  <div class="accesso" id="accesso" hidden>
+    <h2>Codice staff</h2>
+    <input type="password" id="codice-input" placeholder="SG-..." autocomplete="off">
+    <button id="btn-accesso">Entra</button>
+    <div class="msg" id="msg-accesso"></div>
+  </div>
   <div id="contenuto"><div class="vuoto">Caricamento...</div></div>
   <div class="aggiornamento" id="aggiornamento"></div>
+  <button class="esci" id="btn-esci" hidden>Esci</button>
 </div>
 
 <script>
@@ -50,6 +64,30 @@
   var backendUrl = '';
   var idVisti = {};
   var primoGiro = true;
+  var CHIAVE = 'sg_staff_code';
+  var accesso = document.getElementById('accesso');
+  var btnEsci = document.getElementById('btn-esci');
+  var msgAccesso = document.getElementById('msg-accesso');
+  var timer = null;
+
+  function codice() { try { return localStorage.getItem(CHIAVE) || ''; } catch (e) { return ''; } }
+
+  function chiediCodice(messaggio) {
+    if (timer) { clearInterval(timer); timer = null; }
+    try { localStorage.removeItem(CHIAVE); } catch (e) {}
+    accesso.hidden = false;
+    btnEsci.hidden = true;
+    contenuto.innerHTML = '';
+    aggiornamento.textContent = '';
+    msgAccesso.textContent = messaggio || '';
+  }
+
+  function avvia() {
+    accesso.hidden = true;
+    btnEsci.hidden = false;
+    carica();
+    if (!timer) timer = setInterval(carica, 10000);
+  }
 
   function oraBreve(iso) {
     var d = new Date(iso);
@@ -77,9 +115,12 @@
     bottone.textContent = '...';
     fetch(backendUrl, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + codice() },
       body: JSON.stringify({ azione: 'fatto', id: id })
-    }).then(function () { carica(); })
-      .catch(function () { bottone.disabled = false; bottone.textContent = 'Fatto'; });
+    }).then(function (r) {
+      if (r.status === 401) { chiediCodice('Codice non valido, inseriscilo di nuovo.'); return; }
+      carica();
+    }).catch(function () { bottone.disabled = false; bottone.textContent = 'Fatto'; });
   }
 
   function creaCard(e, orizzontale) {
@@ -178,14 +219,36 @@
   }
 
   function carica() {
-    if (!backendUrl) return;
-    fetch(backendUrl + '?azione=lista&v=' + Date.now())
-      .then(function (r) { return r.json(); })
-      .then(function (j) { if (j.ok) mostra(j.chiamate || []); })
+    if (!backendUrl || !codice()) return;
+    fetch(backendUrl + '?azione=lista&v=' + Date.now(), {
+      headers: { 'Authorization': 'Bearer ' + codice() }
+    })
+      .then(function (r) {
+        if (r.status === 401) { chiediCodice('Codice non valido o revocato.'); return null; }
+        return r.json();
+      })
+      .then(function (j) { if (j && j.ok) mostra(j.chiamate || []); })
       .catch(function () {
         aggiornamento.textContent = 'Connessione assente, riprovo...';
       });
   }
+
+  document.getElementById('btn-accesso').addEventListener('click', function () {
+    var c = document.getElementById('codice-input').value.trim();
+    if (!c) { msgAccesso.textContent = 'Inserisci il codice.'; return; }
+    msgAccesso.textContent = 'Verifica...';
+    fetch(backendUrl + '?azione=lista&v=' + Date.now(), {
+      headers: { 'Authorization': 'Bearer ' + c }
+    }).then(function (r) {
+      if (!r.ok) { msgAccesso.textContent = 'Codice non valido.'; return; }
+      try { localStorage.setItem(CHIAVE, c); } catch (e) {}
+      document.getElementById('codice-input').value = '';
+      msgAccesso.textContent = '';
+      avvia();
+    }).catch(function () { msgAccesso.textContent = 'Connessione assente.'; });
+  });
+
+  btnEsci.addEventListener('click', function () { chiediCodice(''); });
 
   fetch('config.json?v=' + Date.now())
     .then(function (r) { return r.json(); })
@@ -195,8 +258,7 @@
         contenuto.innerHTML = '<div class="errore">Il backend non è ancora attivo.<br>Configuralo dalla <a href="admin.html">dashboard</a>.</div>';
         return;
       }
-      carica();
-      setInterval(carica, 10000);
+      if (codice()) avvia(); else chiediCodice('');
     });
 })();
 </script>
