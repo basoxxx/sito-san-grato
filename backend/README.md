@@ -13,10 +13,10 @@ Costo: **zero**. Serve solo un account Google.
    - Esegui come: **Me**
    - Chi ha accesso: **Chiunque**
 5. Copia l'**URL della web app** (finisce con `/exec`)
-6. Nel file `config.js` del sito:
-   - incolla l'URL in `backendUrl`
-   - metti `chiamaCameriere: true`
-7. Fai il push su GitHub — fatto!
+6. Apri la dashboard (`admin.html` del sito):
+   - incolla l'URL nel campo "URL backend" e salva
+   - premi "Attiva sezione"
+7. Fatto! Online in 1-2 minuti.
 
 ## Come funziona
 

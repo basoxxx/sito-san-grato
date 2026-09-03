@@ -14,7 +14,6 @@
     a:hover { color: #B87A08; }
   </style>
 
-  <script src="config.js"></script>
 </head>
 <body>
 <div style="background: #FBF3DA; min-height: 100%; display: flex; justify-content: center;">
@@ -203,8 +202,9 @@
 </div>
 
 <script>
-(function () {
-  var cfg = window.CONFIG || {};
+fetch('config.json?v=' + Date.now())
+  .then(function (r) { return r.json(); })
+  .then(function (cfg) {
   if (!cfg.chiamaCameriere || !cfg.backendUrl) return;
 
   var box = document.getElementById('chiama-cameriere');
@@ -240,7 +240,7 @@
       bottone.disabled = false;
     });
   });
-})();
+}).catch(function () {});
 </script>
 </body>
 </html>
