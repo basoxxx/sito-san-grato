@@ -19,3 +19,18 @@ CREATE TABLE IF NOT EXISTS iscrizioni (
 );
 
 CREATE INDEX IF NOT EXISTS idx_iscrizioni_fila ON iscrizioni (fila);
+
+CREATE TABLE IF NOT EXISTS telegram (
+  chat_id TEXT PRIMARY KEY,
+  fila TEXT NOT NULL,
+  nome TEXT,
+  creata TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_telegram_fila ON telegram (fila);
+
+CREATE TABLE IF NOT EXISTS codici_telegram (
+  codice TEXT PRIMARY KEY,
+  fila TEXT NOT NULL,
+  scade INTEGER NOT NULL
+);

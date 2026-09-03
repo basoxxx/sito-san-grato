@@ -64,6 +64,49 @@ Dettagli tecnici:
 - Con la pagina aperta il cameriere sente comunque suono e vibrazione, anche
   senza notifiche di sistema.
 
+
+## Notifiche via Telegram (alternativa, funziona uguale su iPhone e Android)
+
+Il cameriere apre `cameriere.html`, sceglie la fila e preme **«Ricevi le
+chiamate su Telegram»**: si apre il bot, preme *Avvia* e da quel momento riceve
+un messaggio Telegram a ogni chiamata della sua fila. Per smettere scrive
+`/stop` al bot.
+
+### Come collegare il bot (una volta sola)
+
+1. Su Telegram scrivi a **@BotFather**, comando `/newbot`, e segui le
+   istruzioni. Ti da' un token lungo tipo `123456:AAF...`.
+2. Metti il token fra i secret del Worker (il token non passa da nessun'altra
+   parte):
+
+   ```bash
+   cd backend
+   npx wrangler secret put TELEGRAM_TOKEN
+   npx wrangler deploy
+   ```
+
+3. Collega il bot al server (una sola chiamata, serve il codice gestore):
+
+   ```bash
+   curl -X POST https://san-grato-backend.san-grato-rivara.workers.dev \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer IL_TUO_CODICE_GESTORE" \
+     -d '{"azione":"telegramWebhook"}'
+   ```
+
+Se non fai nulla di tutto questo il sistema resta semplicemente spento: la
+pagina cameriere non mostra il pulsante Telegram e tutto il resto funziona
+come prima.
+
+### Come funziona
+
+- `codici_telegram`: codici usa e getta (15 minuti) che legano il link alla
+  fila giusta. Il codice staff non finisce mai dentro il link.
+- `telegram`: le registrazioni (chat, fila). Se un cameriere blocca il bot la
+  registrazione si cancella da sola.
+- Il webhook accetta solo richieste con l'intestazione segreta che Telegram
+  invia (`TELEGRAM_WEBHOOK_SECRET`).
+
 ## Pagine
 
 - Menu: `https://basoxxx.github.io/sito-san-grato/`

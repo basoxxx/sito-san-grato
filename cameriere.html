@@ -75,6 +75,14 @@
       <span class="mia-fila" id="etichetta-fila">–</span>
       <button class="ghost" id="btn-notifiche">Attiva notifiche</button>
     </div>
+    <button class="ghost" id="btn-telegram" hidden style="width:100%">Ricevi le chiamate su Telegram</button>
+    <div class="guida" id="guida-telegram" hidden>
+      <h3>Notifiche su Telegram</h3>
+      <div class="nota" id="testo-telegram"></div>
+      <a id="link-telegram" href="#" target="_blank" rel="noopener"
+         style="display:block; text-align:center; text-decoration:none; min-height:50px; line-height:50px; background:#E9A722; color:#FBF3DA; font-family:'Corben',Georgia,serif; font-weight:700; font-size:17px; border-radius:14px;">Apri Telegram</a>
+      <div class="nota">Il link vale 15 minuti. Nella chat premi <b>Avvia</b>: da lì riceverai le chiamate della tua fila, anche a telefono bloccato. Per smettere scrivi <b>/stop</b> al bot.</div>
+    </div>
     <div class="stato-notifiche" id="stato-notifiche" hidden>
       <span class="pallino" id="pallino"></span><span id="testo-notifiche"></span>
     </div>
@@ -230,6 +238,40 @@
         });
     });
   }
+
+  // ---------- Telegram ----------
+  var botTelegram = '';
+
+  function preparaTelegram() {
+    if (!botTelegram) return;
+    document.getElementById('btn-telegram').hidden = false;
+  }
+
+  document.getElementById('btn-telegram').addEventListener('click', function () {
+    var bottone = this;
+    bottone.disabled = true;
+    bottone.textContent = 'Preparo il link...';
+    fetch(backendUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + leggi(K_CODICE) },
+      body: JSON.stringify({ azione: 'codiceTelegram', fila: leggi(K_FILA) })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        bottone.disabled = false;
+        bottone.textContent = 'Ricevi le chiamate su Telegram';
+        if (!j.ok) { alert('Non riesco a preparare il link, riprova.'); return; }
+        document.getElementById('testo-telegram').textContent =
+          'Ti registro per la fila ' + leggi(K_FILA) + '. Tocca il pulsante: si apre Telegram sul bot giusto.';
+        document.getElementById('link-telegram').href =
+          'https://t.me/' + botTelegram + '?start=' + j.codice;
+        document.getElementById('guida-telegram').hidden = false;
+      })
+      .catch(function () {
+        bottone.disabled = false;
+        bottone.textContent = 'Ricevi le chiamate su Telegram';
+      });
+  });
 
   // iPhone e iPad: Apple permette le notifiche web solo alle pagine aggiunte
   // alla schermata Home. Non e' aggirabile via codice: si guida il cameriere.
@@ -389,6 +431,7 @@
     carica();
     if (!timer) timer = setInterval(carica, 8000);
     controllaNotifiche();
+    preparaTelegram();
     salvaPerServiceWorker();
     tieniAcceso();
   }
@@ -435,6 +478,12 @@
     })
     .then(function (v) {
       chiaveVapid = (v && v.chiave) || '';
+      return fetch(backendUrl + '?azione=telegram')
+        .then(function (r) { return r.json(); })
+        .catch(function () { return null; });
+    })
+    .then(function (t) {
+      botTelegram = (t && t.attivo && t.bot) ? t.bot : '';
       if (!leggi(K_CODICE)) chiediCodice('');
       else if (!leggi(K_FILA)) chiediFila();
       else avviaServizio();

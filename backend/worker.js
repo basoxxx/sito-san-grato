@@ -92,6 +92,107 @@ async function firmaVapid(env, destinatario) {
   return testa + "." + corpo + "." + base64url(firma);
 }
 
+
+// ---------- NOTIFICHE TELEGRAM ----------
+// Alternativa alle notifiche web: funziona uguale su iPhone e Android senza
+// installare nulla. Il cameriere si registra una volta sola con un link.
+
+function telegramAttivo(env) {
+  return !!(env.TELEGRAM_TOKEN && env.TELEGRAM_TOKEN.length > 20);
+}
+
+async function telegramApi(env, metodo, corpo) {
+  const risposta = await fetch(
+    "https://api.telegram.org/bot" + env.TELEGRAM_TOKEN + "/" + metodo,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(corpo || {}),
+    }
+  );
+  return await risposta.json();
+}
+
+async function avvisaTelegram(env, fila, tavolo) {
+  if (!telegramAttivo(env)) return;
+  const { results } = await env.DB.prepare(
+    "SELECT chat_id FROM telegram WHERE fila = ?"
+  ).bind(fila).all();
+  for (const riga of results) {
+    try {
+      const esito = await telegramApi(env, "sendMessage", {
+        chat_id: riga.chat_id,
+        text: "\uD83D\uDD14 " + tavolo + "\nTi stanno chiamando.",
+      });
+      // Chat bloccata o cancellata: tolgo la registrazione.
+      if (esito && esito.ok === false && (esito.error_code === 403 || esito.error_code === 400)) {
+        await env.DB.prepare("DELETE FROM telegram WHERE chat_id = ?").bind(riga.chat_id).run();
+      }
+    } catch (e) {
+      console.log("telegram fallito:", e && e.message);
+    }
+  }
+}
+
+// Riceve i messaggi inviati al bot (registrazione dei camerieri).
+async function gestisciTelegram(richiesta, env) {
+  if (
+    env.TELEGRAM_WEBHOOK_SECRET &&
+    richiesta.headers.get("X-Telegram-Bot-Api-Secret-Token") !== env.TELEGRAM_WEBHOOK_SECRET
+  ) {
+    return new Response("no", { status: 401 });
+  }
+
+  let aggiornamento;
+  try {
+    aggiornamento = await richiesta.json();
+  } catch {
+    return new Response("ok");
+  }
+
+  const messaggio = aggiornamento.message || aggiornamento.edited_message;
+  if (!messaggio || !messaggio.chat) return new Response("ok");
+
+  const chat = String(messaggio.chat.id);
+  const testo = String(messaggio.text || "").trim();
+  const nome = String((messaggio.from && messaggio.from.first_name) || "").slice(0, 40);
+
+  async function rispondi(testoRisposta) {
+    await telegramApi(env, "sendMessage", { chat_id: chat, text: testoRisposta });
+    return new Response("ok");
+  }
+
+  if (/^\/stop/.test(testo)) {
+    await env.DB.prepare("DELETE FROM telegram WHERE chat_id = ?").bind(chat).run();
+    return await rispondi("Va bene, non ti mando piu' le chiamate. Per ricominciare usa di nuovo il link dalla pagina cameriere.");
+  }
+
+  const avvio = /^\/start(?:\s+(\S+))?/.exec(testo);
+  if (avvio) {
+    const codice = (avvio[1] || "").toUpperCase();
+    if (!codice) {
+      return await rispondi("Ciao! Per ricevere le chiamate apri la pagina cameriere, scegli la tua fila e premi «Notifiche su Telegram».");
+    }
+    const riga = await env.DB.prepare(
+      "SELECT fila, scade FROM codici_telegram WHERE codice = ?"
+    ).bind(codice).first();
+    if (!riga || riga.scade < Math.floor(Date.now() / 1000)) {
+      return await rispondi("Questo link non e' piu' valido. Torna sulla pagina cameriere e premi di nuovo «Notifiche su Telegram».");
+    }
+    await env.DB.prepare(
+      "INSERT INTO telegram (chat_id, fila, nome, creata) VALUES (?, ?, ?, ?) " +
+        "ON CONFLICT(chat_id) DO UPDATE SET fila = excluded.fila, nome = excluded.nome"
+    ).bind(chat, riga.fila, nome, new Date().toISOString()).run();
+    await env.DB.prepare("DELETE FROM codici_telegram WHERE codice = ?").bind(codice).run();
+    return await rispondi(
+      "Perfetto" + (nome ? " " + nome : "") + "! Riceverai qui le chiamate della fila " + riga.fila +
+      ".\nPer smettere scrivi /stop."
+    );
+  }
+
+  return await rispondi("Per registrarti usa il link dalla pagina cameriere. Per smettere scrivi /stop.");
+}
+
 // Sveglia i telefoni dei camerieri di quella fila. Nessun dato viaggia nella
 // notifica: il telefono, una volta svegliato, chiede al server cosa e' arrivato.
 async function avvisaFila(env, fila) {
@@ -132,6 +233,11 @@ export default {
     const url = new URL(richiesta.url);
     const azioneGet = url.searchParams.get("azione");
 
+    // Messaggi in arrivo dal bot Telegram.
+    if (url.pathname === "/telegram" && richiesta.method === "POST") {
+      return await gestisciTelegram(richiesta, env);
+    }
+
     // ---------- LETTURE ----------
     if (richiesta.method === "GET") {
       // Stato della sezione: pubblico, serve al menu per sapere se mostrarla.
@@ -148,6 +254,16 @@ export default {
           "SELECT id, ora, tavolo, stato FROM chiamate ORDER BY id DESC LIMIT 100"
         ).all();
         return json({ ok: true, chiamate: results }, 200, richiesta);
+      }
+
+      if (azioneGet === "telegram") {
+        if (!telegramAttivo(env)) return json({ ok: true, attivo: false }, 200, richiesta);
+        try {
+          const io = await telegramApi(env, "getMe", {});
+          return json({ ok: true, attivo: true, bot: (io.result && io.result.username) || "" }, 200, richiesta);
+        } catch (e) {
+          return json({ ok: true, attivo: false }, 200, richiesta);
+        }
       }
 
       if (azioneGet === "vapid") {
@@ -184,6 +300,50 @@ export default {
             "ON CONFLICT(chiave) DO UPDATE SET valore = excluded.valore"
         ).bind(valore).run();
         return json({ ok: true, chiamaCameriere: valore === "1" }, 200, richiesta);
+      }
+
+      // Collega il bot: dice a Telegram dove mandare i messaggi. Solo il gestore.
+      if (dati.azione === "telegramWebhook") {
+        if (!autorizzato(richiesta, env.TOKEN_ADMIN)) {
+          return json({ ok: false, errore: "codice non valido" }, 401, richiesta);
+        }
+        if (!telegramAttivo(env)) {
+          return json({ ok: false, errore: "manca il token del bot" }, 400, richiesta);
+        }
+        const io = await telegramApi(env, "getMe", {});
+        const esito = await telegramApi(env, "setWebhook", {
+          url: new URL(richiesta.url).origin + "/telegram",
+          secret_token: env.TELEGRAM_WEBHOOK_SECRET,
+          allowed_updates: ["message"],
+          drop_pending_updates: true,
+        });
+        return json({
+          ok: !!esito.ok,
+          bot: (io.result && io.result.username) || "",
+          dettaglio: esito.description || "",
+        }, 200, richiesta);
+      }
+
+      // Codice usa e getta per registrarsi al bot Telegram.
+      if (dati.azione === "codiceTelegram") {
+        if (!autorizzato(richiesta, env.TOKEN_STAFF)) {
+          return json({ ok: false, errore: "codice non valido" }, 401, richiesta);
+        }
+        if (!telegramAttivo(env)) return json({ ok: false, errore: "telegram non attivo" }, 400, richiesta);
+        const fila = String(dati.fila || "").toUpperCase();
+        if (!/^[A-H]$/.test(fila)) return json({ ok: false, errore: "fila non valida" }, 400, richiesta);
+
+        const alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        const casuali = crypto.getRandomValues(new Uint8Array(8));
+        let codice = "";
+        for (let i = 0; i < 8; i++) codice += alfabeto[casuali[i] % alfabeto.length];
+
+        await env.DB.prepare("DELETE FROM codici_telegram WHERE scade < ?")
+          .bind(Math.floor(Date.now() / 1000)).run();
+        await env.DB.prepare("INSERT INTO codici_telegram (codice, fila, scade) VALUES (?, ?, ?)")
+          .bind(codice, fila, Math.floor(Date.now() / 1000) + 900).run();
+
+        return json({ ok: true, codice: codice }, 200, richiesta);
       }
 
       // Il cameriere accende le notifiche per la sua fila.
@@ -246,6 +406,7 @@ export default {
       // Avvisa i telefoni dei camerieri di quella fila senza far aspettare il cliente.
       const fila = tavolo.charAt(5);
       ctx.waitUntil(avvisaFila(env, fila));
+      ctx.waitUntil(avvisaTelegram(env, fila, tavolo));
 
       return json({ ok: true }, 200, richiesta);
     }
