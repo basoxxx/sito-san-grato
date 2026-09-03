@@ -54,18 +54,18 @@ export default {
       }
 
       // Nuova chiamata dal menu
-      const tavolo = String(dati.tavolo || "").trim().slice(0, 10);
+      const tavolo = String(dati.tavolo || "").trim().slice(0, 20);
       if (!tavolo) return json({ ok: false, errore: "tavolo mancante" }, 400);
 
       // Anti-doppione: ignora se lo stesso tavolo ha già una chiamata in attesa
       const esistente = await env.DB.prepare(
         "SELECT id FROM chiamate WHERE tavolo = ? AND stato = 'IN ATTESA' LIMIT 1"
-      ).bind("Tavolo " + tavolo).first();
+      ).bind(tavolo).first();
       if (esistente) return json({ ok: true, doppione: true });
 
       await env.DB.prepare(
         "INSERT INTO chiamate (ora, tavolo, stato) VALUES (?, ?, 'IN ATTESA')"
-      ).bind(new Date().toISOString(), "Tavolo " + tavolo).run();
+      ).bind(new Date().toISOString(), tavolo).run();
       return json({ ok: true });
     }
 

@@ -178,9 +178,18 @@
   <!-- CHIAMA IL CAMERIERE (attivabile da config.js) -->
   <div id="chiama-cameriere" hidden style="background: #FDF8E8; border: 3px solid #E9A722; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center;">
     <div style="font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 20px; color: #E9A722;">Serve qualcosa?</div>
-    <div id="cc-scelta-tavolo" hidden style="display: flex; align-items: center; gap: 10px;">
-      <label for="cc-numero" style="font-size: 14px; font-weight: 600; color: #4A3B23;">Numero tavolo:</label>
-      <input id="cc-numero" type="number" min="1" max="99" inputmode="numeric" style="width: 70px; min-height: 44px; font-size: 18px; font-weight: 700; text-align: center; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px;">
+    <div id="cc-scelta-tavolo" hidden style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
+      <div style="font-size: 14px; font-weight: 600; color: #4A3B23;">Scegli la tua fila:</div>
+      <div id="cc-file" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 260px;">
+        <button class="cc-fila" data-fila="A" style="min-height: 48px; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; cursor: pointer;">A</button>
+        <button class="cc-fila" data-fila="B" style="min-height: 48px; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; cursor: pointer;">B</button>
+        <button class="cc-fila" data-fila="C" style="min-height: 48px; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; cursor: pointer;">C</button>
+        <button class="cc-fila" data-fila="D" style="min-height: 48px; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; cursor: pointer;">D</button>
+        <button class="cc-fila" data-fila="E" style="min-height: 48px; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; cursor: pointer;">E</button>
+        <button class="cc-fila" data-fila="F" style="min-height: 48px; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; cursor: pointer;">F</button>
+        <button class="cc-fila" data-fila="G" style="min-height: 48px; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; cursor: pointer;">G</button>
+        <button class="cc-fila" data-fila="H" style="min-height: 48px; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px; cursor: pointer;">H</button>
+      </div>
     </div>
     <button id="cc-bottone" style="min-height: 52px; padding: 0 32px; background: #E9A722; color: #FBF3DA; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; border: none; border-radius: 16px; cursor: pointer;">Chiama il cameriere</button>
     <button id="cc-annulla" hidden style="min-height: 44px; padding: 0 24px; background: transparent; color: #C65B2E; font-family: 'Nunito Sans', system-ui, sans-serif; font-weight: 700; font-size: 14px; border: 2px dashed #E9A722; border-radius: 12px; cursor: pointer;">Annulla</button>
@@ -212,13 +221,25 @@ fetch('config.json?v=' + Date.now())
   box.hidden = false;
 
   var scelta = document.getElementById('cc-scelta-tavolo');
-  var input = document.getElementById('cc-numero');
   var bottone = document.getElementById('cc-bottone');
   var esito = document.getElementById('cc-esito');
+  var filaScelta = '';
+  var inConferma = false;
   scelta.hidden = false;
 
+  var bottoniFila = document.querySelectorAll('.cc-fila');
+  bottoniFila.forEach(function (b) {
+    b.addEventListener('click', function () {
+      filaScelta = b.dataset.fila;
+      bottoniFila.forEach(function (x) {
+        x.style.background = '#FBF3DA'; x.style.color = '#4A3B23'; x.style.borderColor = '#E0C480';
+      });
+      b.style.background = '#E9A722'; b.style.color = '#FBF3DA'; b.style.borderColor = '#E9A722';
+      if (inConferma) resetConferma();
+    });
+  });
+
   var annulla = document.getElementById('cc-annulla');
-  var inConferma = false;
 
   function resetConferma() {
     inConferma = false;
@@ -228,15 +249,14 @@ fetch('config.json?v=' + Date.now())
   }
 
   annulla.addEventListener('click', resetConferma);
-  input.addEventListener('input', function () { if (inConferma) resetConferma(); });
 
   bottone.addEventListener('click', function () {
-    var tavolo = input.value.trim();
-    if (!tavolo) { esito.textContent = 'Inserisci il numero del tavolo'; return; }
+    if (!filaScelta) { esito.textContent = 'Scegli prima la tua fila'; return; }
+    var fila = 'Fila ' + filaScelta;
 
     if (!inConferma) {
       inConferma = true;
-      bottone.textContent = 'Conferma · tavolo ' + tavolo;
+      bottone.textContent = 'Conferma · fila ' + filaScelta;
       annulla.hidden = false;
       esito.textContent = 'Premi di nuovo per confermare la chiamata';
       return;
@@ -248,10 +268,10 @@ fetch('config.json?v=' + Date.now())
     esito.textContent = 'Invio in corso...';
     fetch(cfg.backendUrl, {
       method: 'POST',
-      body: JSON.stringify({ tavolo: tavolo })
+      body: JSON.stringify({ tavolo: fila })
     }).then(function () {
       bottone.textContent = 'Chiama il cameriere';
-      esito.textContent = 'Chiamata inviata! Un cameriere arriva al tavolo ' + tavolo + '.';
+      esito.textContent = 'Chiamata inviata! Un cameriere arriva alla fila ' + filaScelta + '.';
       setTimeout(function () { bottone.disabled = false; esito.textContent = ''; }, 60000);
     }).catch(function () {
       bottone.textContent = 'Chiama il cameriere';
