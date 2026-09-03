@@ -183,6 +183,7 @@
       <input id="cc-numero" type="number" min="1" max="99" inputmode="numeric" style="width: 70px; min-height: 44px; font-size: 18px; font-weight: 700; text-align: center; color: #4A3B23; background: #FBF3DA; border: 2px solid #E0C480; border-radius: 12px;">
     </div>
     <button id="cc-bottone" style="min-height: 52px; padding: 0 32px; background: #E9A722; color: #FBF3DA; font-family: 'Corben', Georgia, serif; font-weight: 700; font-size: 18px; border: none; border-radius: 16px; cursor: pointer;">Chiama il cameriere</button>
+    <button id="cc-annulla" hidden style="min-height: 44px; padding: 0 24px; background: transparent; color: #C65B2E; font-family: 'Nunito Sans', system-ui, sans-serif; font-weight: 700; font-size: 14px; border: 2px dashed #E9A722; border-radius: 12px; cursor: pointer;">Annulla</button>
     <div id="cc-esito" style="font-size: 14px; font-weight: 600; color: #4A3B23;"></div>
   </div>
 
@@ -216,18 +217,44 @@ fetch('config.json?v=' + Date.now())
   var esito = document.getElementById('cc-esito');
   scelta.hidden = false;
 
+  var annulla = document.getElementById('cc-annulla');
+  var inConferma = false;
+
+  function resetConferma() {
+    inConferma = false;
+    bottone.textContent = 'Chiama il cameriere';
+    annulla.hidden = true;
+    esito.textContent = '';
+  }
+
+  annulla.addEventListener('click', resetConferma);
+  input.addEventListener('input', function () { if (inConferma) resetConferma(); });
+
   bottone.addEventListener('click', function () {
     var tavolo = input.value.trim();
     if (!tavolo) { esito.textContent = 'Inserisci il numero del tavolo'; return; }
+
+    if (!inConferma) {
+      inConferma = true;
+      bottone.textContent = 'Conferma · tavolo ' + tavolo;
+      annulla.hidden = false;
+      esito.textContent = 'Premi di nuovo per confermare la chiamata';
+      return;
+    }
+
+    inConferma = false;
+    annulla.hidden = true;
     bottone.disabled = true;
     esito.textContent = 'Invio in corso...';
     fetch(cfg.backendUrl, {
       method: 'POST',
       body: JSON.stringify({ tavolo: tavolo })
     }).then(function () {
+      bottone.textContent = 'Chiama il cameriere';
       esito.textContent = 'Chiamata inviata! Un cameriere arriva al tavolo ' + tavolo + '.';
       setTimeout(function () { bottone.disabled = false; esito.textContent = ''; }, 60000);
     }).catch(function () {
+      bottone.textContent = 'Chiama il cameriere';
       esito.textContent = 'Errore di invio, riprova o alza la mano!';
       bottone.disabled = false;
     });
