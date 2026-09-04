@@ -48,6 +48,9 @@ TESTA = """<!doctype html>
   .invito { font-weight: 800; color: #4A3B23; }
   .codice { background: #fff; border-radius: 3mm; }
   .come { font-weight: 600; color: #8A6D3B; font-style: italic; }
+  /* Testo scuro sull'oro: il crema della locandina qui fa 1.9:1, da lontano sparisce. */
+  .targa { background: #E9A722; color: #3A2E18; font-family: 'Corben', Georgia, serif;
+           font-weight: 700; border-radius: 999px; white-space: nowrap; }
   .indirizzo { font-weight: 700; color: #B87A08; letter-spacing: .02em; }
   .istruzioni { max-width: 190mm; margin: 8mm auto; padding: 6mm 8mm; background: #fff;
                 border: 1px solid #E7D9AE; border-radius: 4mm; color: #4A3B23; font-size: 11pt; }
@@ -69,7 +72,7 @@ TESTA = """<!doctype html>
 """
 
 
-def carta(larg, alt, titolo_pt, u, luogo_pt, invito_pt, qr_mm, come_pt, ind_pt, bordo):
+def carta(larg, alt, titolo_pt, u, luogo_pt, invito_pt, qr_mm, come_pt, ind_pt, bordo, targa_pt):
     """Un cartello. `u` e' l'unita' di spaziatura in mm, tutto il resto scala su quella."""
     return f"""<div class="carta" style="width:{larg};height:{alt};padding:{bordo}">
       <div class="titolo" style="font-size:{titolo_pt}pt">San Grato</div>
@@ -80,13 +83,14 @@ def carta(larg, alt, titolo_pt, u, luogo_pt, invito_pt, qr_mm, come_pt, ind_pt, 
       </div>
       <div class="invito" style="font-size:{invito_pt}pt;margin:{u * 1.6}mm 0 {u * 1.2}mm">Il men&ugrave; sul telefono</div>
       <div class="codice" style="width:{qr_mm}mm;padding:{qr_mm * BORDO:.1f}mm">{QR}</div>
-      <div class="come" style="font-size:{come_pt}pt;margin-top:{u * 1.4}mm">Inquadra il codice con la fotocamera</div>
-      <div class="indirizzo" style="font-size:{ind_pt}pt;margin-top:{u * 0.7}mm">basoxxx.github.io/sito-san-grato</div>
+      <div class="come" style="font-size:{come_pt}pt;margin-top:{u * 1.2}mm">Inquadra il codice con la fotocamera</div>
+      <div class="targa" style="font-size:{targa_pt}pt;margin-top:{u * 1.3}mm;padding:{u * 0.7}mm {u * 1.6}mm {u * 0.45}mm">e chiama il cameriere</div>
+      <div class="indirizzo" style="font-size:{ind_pt}pt;margin-top:{u * 1.0}mm">basoxxx.github.io/sito-san-grato</div>
     </div>"""
 
 
 # A5 da mettere in piedi sui tavoli: 2 per foglio A4 orizzontale.
-a5 = carta("148mm", "210mm", 40, 4, 13, 15, 74, 11, 9.5, "10mm")
+a5 = carta("148mm", "210mm", 39, 4, 13, 15, 70, 11, 9.5, "10mm", 14)
 open("stampa/qr-tavoli-a5.html", "w").write(TESTA % {
     "titolo": "QR da tavolo &middot; formato A5",
     "pagina": "A4 landscape",
@@ -95,7 +99,7 @@ open("stampa/qr-tavoli-a5.html", "w").write(TESTA % {
 })
 
 # Piccoli da attaccare al tavolo: 8 per foglio A4 verticale.
-pic = carta("105mm", "74mm", 19, 2, 7, 8, 32, 6.5, 5.5, "4mm")
+pic = carta("105mm", "74mm", 18, 1.9, 6.5, 7.5, 29, 6, 5, "4mm", 7)
 open("stampa/qr-tavoli-piccolo.html", "w").write(TESTA % {
     "titolo": "QR da tavolo &middot; formato piccolo",
     "pagina": "A4 portrait",
